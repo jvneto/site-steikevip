@@ -28,13 +28,13 @@ export function ScreenWelcome({ next, t }) {
             boxShadow: `0 0 30px ${t.goldTone}55, 0 0 70px ${t.goldTone}22, 0 0 120px ${t.goldTone}11`,
             border: `1px solid ${t.goldTone}66`,
           }}>
-            <span style={{ fontFamily: t.displayFont, fontSize: 40, color: "#0B0A07", fontWeight: 800, letterSpacing: "-.04em" }}>M</span>
+            <span style={{ fontFamily: t.displayFont, fontSize: 40, color: "#0B0A07", fontWeight: 800, letterSpacing: "-.04em" }}>S</span>
           </div>
           <div className="mb-splash-text" style={{
             fontFamily: t.displayFont, fontSize: 28, fontWeight: 600,
             letterSpacing: "-.02em", textAlign: "center",
           }}>
-            Mestre<span style={{ color: t.goldTone, textShadow: `0 0 14px ${t.goldTone}66` }}>Bet</span>
+            Steike<span style={{ color: t.goldTone, textShadow: `0 0 14px ${t.goldTone}66` }}>Bet</span>
           </div>
           <div className="mb-splash-sub" style={{
             fontFamily: "'Geist Mono', ui-monospace, monospace",
@@ -62,13 +62,13 @@ export function ScreenWelcome({ next, t }) {
 
   return (
     <ContentWrap>
-      <Eyebrow t={t}>BEM-VINDO, MESTRE</Eyebrow>
+      <Eyebrow t={t}>BEM-VINDO, STEIKE</Eyebrow>
       <H1 t={t}>Voc&ecirc; &eacute; da <span style={{ color: t.goldTone }}>elite</span>?</H1>
       <Sub>Escolha como quer ser identificado dentro da Banca Privada.</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, maxWidth: 760 }}>
-        <OptionCard t={t} onClick={next} title="Mestre" sub="REI DA BANCA"
+        <OptionCard t={t} onClick={next} title="Homem" sub="REI DA BANCA"
           icon={<Avatar t={t} kind="m" />} />
-        <OptionCard t={t} onClick={next} title="Mestra" sub="RAINHA DO GREEN"
+        <OptionCard t={t} onClick={next} title="Mulher" sub="RAINHA DO GREEN"
           icon={<Avatar t={t} kind="f" />} />
       </div>
     </ContentWrap>
@@ -102,8 +102,8 @@ export function ScreenAge({ next, t }) {
   return (
     <ContentWrap>
       <Eyebrow t={t}>PASSO 01 &middot; PERFIL</Eyebrow>
-      <H1 t={t}>Qual a <span style={{ color: t.goldTone }}>faixa et&aacute;ria</span> da banca?</H1>
-      <Sub>Filtro importante pra mestre que quer faturar de verdade.</Sub>
+      <H1 t={t}>Qual a sua <span style={{ color: t.goldTone }}>faixa et&aacute;ria</span>?</H1>
+      <Sub>Filtro importante pra Steike que quer faturar de verdade.</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, maxWidth: 760 }}>
         {opts.map((o, i) => <OptionCard key={i} t={t} onClick={next} title={o.title} sub={o.sub} />)}
       </div>
@@ -123,7 +123,7 @@ export function ScreenFocus({ next, t }) {
     <ContentWrap>
       <Eyebrow t={t}>PASSO 02 &middot; INTEN&Ccedil;&Atilde;O</Eyebrow>
       <H1 t={t}>Qual seu <span style={{ color: t.goldTone }}>foco</span> pra faturar hoje?</H1>
-      <Sub>O que voc&ecirc; quer conquistar com a Banca Privada do Mestre?</Sub>
+      <Sub>O que voc&ecirc; quer conquistar com a Banca Privada do Steike?</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, maxWidth: 760 }}>
         {opts.map((o, i) => <OptionCard key={i} t={t} onClick={next} title={o.title} sub={o.sub} />)}
       </div>
@@ -263,7 +263,7 @@ export function ScreenRoleta({ next, t }) {
             <circle cx={cx} cy={cy} r={28} fill="#0a0908" stroke={`${t.goldTone}55`} strokeWidth="2" />
             <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
               style={{ fontSize: 18, fontWeight: 700, fill: t.goldTone, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              M
+              S
             </text>
           </svg>
         </div>
@@ -311,30 +311,36 @@ export function ScreenRoleta({ next, t }) {
   )
 }
 
-// ─── Conexao ─────────────────────────────────────────────────────────────────
+// ─── Conquistas ──────────────────────────────────────────────────────────────
 export function ScreenConexao({ next, t }) {
+  const wins = [
+    { img: "/conquistas/king-carros.jpg", title: "Porsche e Lambo no green", tag: "ENTRADA CERTA PAGOU" },
+    { img: "/conquistas/king-mansao.jpg", title: "A banca assinou essa casa", tag: "GREEN VIROU ESCRITURA" },
+  ]
   return (
     <ContentWrap>
-      <Eyebrow t={t}>PROVA SOCIAL</Eyebrow>
-      <H1 t={t}>Conex&atilde;o com os <span style={{ color: t.goldTone }}>brabos</span></H1>
-      <Sub>O Mestre &eacute; respeitado pelos maiores nomes do esporte.</Sub>
+      <Eyebrow t={t}>CONQUISTAS</Eyebrow>
+      <H1 t={t}>O que o <span style={{ color: t.goldTone }}>King</span> conquistou</H1>
+      <Sub>Tudo isso a banca colocou na minha vida. As fotos n&atilde;o mentem.</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 22, maxWidth: 880, marginBottom: 32 }}>
-        {["Mestre & Craque #10", "Mestre & Artilheiro"].map((label, i) => (
+        {wins.map((w, i) => (
           <div key={i} style={{
             borderRadius: t.corners === "sharp" ? 0 : 14,
             border: `1px solid ${t.goldTone}35`,
             overflow: "hidden",
             background: "rgba(255,255,255,.02)",
             boxShadow: `${t.shadowOffset}px ${t.shadowOffset}px 0 0 ${t.goldTone}, 0 0 20px ${t.goldTone}12`,
+            display: "flex", flexDirection: "column",
           }}>
-            <ImageSlot t={t} label="foto do mestre c/ celebridade" />
-            <div style={{ padding: "20px 22px", textAlign: "left", borderTop: `1px solid ${t.goldTone}25` }}>
-              <div style={{ fontFamily: t.displayFont, fontSize: 19, letterSpacing: "-.015em", fontWeight: 600 }}>{label}</div>
+            <img src={w.img} alt={w.title} style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", objectPosition: "center", display: "block" }} />
+            <div style={{ padding: "18px 22px", textAlign: "left", borderTop: `1px solid ${t.goldTone}25` }}>
+              <div style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: ".2em", color: `${t.goldTone}cc`, marginBottom: 6 }}>{w.tag}</div>
+              <div style={{ fontFamily: t.displayFont, fontSize: 19, letterSpacing: "-.015em", fontWeight: 600, lineHeight: 1.3, minHeight: "2.6em" }}>{w.title}</div>
             </div>
           </div>
         ))}
       </div>
-      <div style={{ maxWidth: 760, width: "100%" }}>
+      <div style={{ maxWidth: 880, width: "100%" }}>
         <PrimaryButton t={t} onClick={next}>SEGUE O FLUXO</PrimaryButton>
       </div>
     </ContentWrap>
@@ -388,7 +394,7 @@ export function ScreenGreen({ next, t }) {
         <BetSlip t={t} type="multi" />
         <BetSlip t={t} type="single" />
       </div>
-      <div style={{ maxWidth: 760, width: "100%" }}>
+      <div style={{ maxWidth: 880, width: "100%" }}>
         <PrimaryButton t={t} onClick={next}>QUERO ISSO A&Iacute;</PrimaryButton>
       </div>
     </ContentWrap>
@@ -432,7 +438,7 @@ function BetSlip({ t, type }) {
         {[["Mais de 2.5", "Cagliari \u00D7 Napoli", "3.30"], ["Ambos marcam", "Bournemouth \u00D7 United", "2.57"], ["Mais de 2.5", "Villarreal \u00D7 Sociedad", "2.77"]].map((row, i) => (
           <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderTop: i ? "1px solid #e5e5e0" : "none", fontSize: 13 }}>
             <div>
-              <div style={{ fontWeight: 700 }}>{row[0]} <span style={{ color: "#16a34a" }}>&check;</span></div>
+              <div style={{ fontWeight: 700 }}>{row[0]} <span style={{ color: "#16a34a" }}>{"✓"}</span></div>
               <div style={{ color: "#666", fontSize: 11, marginTop: 2 }}>{row[1]}</div>
             </div>
             <div style={{ fontWeight: 700 }}>{row[2]}</div>
@@ -459,9 +465,9 @@ function BetSlip({ t, type }) {
         R$500,00 &middot; Simples
       </div>
       <div style={{ background: "rgba(255,255,255,.04)", padding: 12, borderRadius: 8, marginBottom: 12, fontSize: 12 }}>
-        <span style={{ opacity: .55 }}>&nearr; Compartilhar</span>
+        <span style={{ opacity: .55 }}>{"↗"} Compartilhar</span>
       </div>
-      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>&check; Time A 8-0 <span style={{ opacity: .7, fontWeight: 500 }}>8.00</span></div>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{"✓"} Time A 8-0 <span style={{ opacity: .7, fontWeight: 500 }}>8.00</span></div>
       <div style={{ fontSize: 12, opacity: .55, marginBottom: 14 }}>Resultado Correto</div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderTop: "1px solid rgba(255,255,255,.06)" }}>
         <span><span style={{ display: "inline-block", width: 10, height: 10, background: "#ef4444", borderRadius: 2, marginRight: 6, verticalAlign: "middle" }} />Time A</span><span style={{ fontWeight: 700 }}>8</span>
@@ -484,7 +490,7 @@ function BetSlip({ t, type }) {
 const DEPOIMENTOS = [
   { nome: "Lucas M.", tempo: "membro h\u00E1 3 meses", texto: "Entrei sem acreditar muito, hoje pago minhas contas s\u00F3 com as tips. Melhor investimento que fiz.", lucro: "+R$ 4.200" },
   { nome: "Rafaela S.", tempo: "membro h\u00E1 6 meses", texto: "Nunca imaginei viver de aposta. O grupo mudou minha vis\u00E3o completamente. Green todo dia.", lucro: "+R$ 8.750" },
-  { nome: "Carlos D.", tempo: "membro h\u00E1 2 meses", texto: "No primeiro m\u00EAs j\u00E1 recuperei o investimento 10x. A estrat\u00E9gia do Mestre \u00E9 cirurgica.", lucro: "+R$ 2.890" },
+  { nome: "Carlos D.", tempo: "membro h\u00E1 2 meses", texto: "No primeiro m\u00EAs j\u00E1 recuperei o investimento 10x. A estrat\u00E9gia do Steike \u00E9 cirurgica.", lucro: "+R$ 2.890" },
 ]
 
 export function ScreenDepoimentos({ next, t }) {
@@ -532,7 +538,7 @@ export function ScreenDepoimentos({ next, t }) {
               </div>
             </div>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,.6)", lineHeight: 1.55, margin: 0 }}>
-              &ldquo;{d.texto}&rdquo;
+              “{d.texto}”
             </p>
             {/* Star rating */}
             <div style={{ display: "flex", gap: 3 }}>
@@ -580,7 +586,7 @@ export function ScreenLast({ next, t }) {
   return (
     <ContentWrap>
       <Eyebrow t={t}>&Uacute;LTIMA CHAMADA</Eyebrow>
-      <H1 t={t}>Quase l&aacute;, <span style={{ color: t.goldTone }}>mestre</span>.</H1>
+      <H1 t={t}>Quase l&aacute;, <span style={{ color: t.goldTone }}>Steike</span>.</H1>
       <Sub>O acesso &agrave; Banca Privada t&aacute; fechando. Vai ficar de fora?</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, maxWidth: 760 }}>
         {opts.map((o, i) => <OptionCard key={i} t={t} onClick={next} title={o.title} sub={o.sub} />)}
@@ -658,7 +664,7 @@ export function ScreenVSL({ next, t }) {
               <div style={{ width: 0, height: 0, borderLeft: "18px solid #0B0A07", borderTop: "12px solid transparent", borderBottom: "12px solid transparent", marginLeft: 4 }} />
             </div>
             <div style={{ position: "absolute", bottom: 18, left: 0, right: 0, textAlign: "center", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, color: "rgba(255,255,255,.35)", letterSpacing: ".22em" }}>
-              VSL &middot; MENSAGEM DO MESTRE
+              VSL &middot; MENSAGEM DO STEIKE
             </div>
           </div>
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 4, background: "rgba(255,255,255,.1)" }}>
@@ -795,7 +801,7 @@ export function ScreenCheckout({ next, t, restart }) {
                 <span>De</span><span style={{ textDecoration: "line-through" }}>R$ 239,90</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: t.goldTone, marginTop: 8, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>
-                <span>Desconto</span><span>&minus; R$ 200,00</span>
+                <span>Desconto</span><span>− R$ 200,00</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 20 }}>
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".28em", color: "rgba(255,255,255,.5)" }}>TOTAL HOJE</span>

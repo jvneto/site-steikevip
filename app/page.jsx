@@ -15,7 +15,7 @@ const STEPS = [
   { id: "age",       Cmp: ScreenAge,       pct: 16,  balance: "21,78",   reward: "21,78",  mission: { idx: "02/09", text: "Defina sua faixa et\u00E1ria",                reward: "21,88" } },
   { id: "focus",     Cmp: ScreenFocus,     pct: 26,  balance: "43,66",   reward: "21,88",  mission: { idx: "03/09", text: "Qual seu foco pra faturar",            reward: "43,76" } },
   { id: "roleta",    Cmp: ScreenRoleta,    pct: 38,  balance: "87,42",   reward: "43,76",  mission: { idx: "04/09", text: "Gire a roleta e ganhe",               reward: "50,00" } },
-  { id: "conexao",   Cmp: ScreenConexao,   pct: 48,  balance: "137,42",  reward: "50,00",  mission: { idx: "05/09", text: "Veja com quem o Mestre joga",         reward: "21,79" } },
+  { id: "conexao",   Cmp: ScreenConexao,   pct: 48,  balance: "137,42",  reward: "50,00",  mission: { idx: "05/09", text: "Veja o que o King conquistou",       reward: "21,79" } },
   { id: "green",     Cmp: ScreenGreen,      pct: 52,  balance: "159,21",  reward: "21,79",  mission: { idx: "06/10", text: "S\u00F3 green na conta",                   reward: "21,97" } },
   { id: "depoimnts", Cmp: ScreenDepoimentos,pct: 60,  balance: "181,18",  reward: "21,97",  mission: { idx: "07/10", text: "Veja o que a fam\u00EDlia diz",           reward: "21,88" } },
   { id: "lifestyle", Cmp: ScreenLifestyle,  pct: 68,  balance: "203,06",  reward: "21,88",  mission: { idx: "08/10", text: "Seu novo estilo de vida",            reward: "21,88" } },
@@ -37,7 +37,13 @@ export default function Home() {
   const prevRankRef = useRef(0)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30)
+    // Hysteresis: collapse the header only after a deliberate scroll (64px) and
+    // restore it near the top (8px). The gap prevents the header from rapidly
+    // toggling height around a single threshold (which read as flicker/jump).
+    const onScroll = () => {
+      const y = window.scrollY
+      setScrolled(prev => (prev ? y > 8 : y > 64))
+    }
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
@@ -118,8 +124,11 @@ export default function Home() {
         <TweakColor label="Gold tone" value={t.goldTone}
           options={GOLD_OPTIONS}
           onChange={v => setTweak("goldTone", v)} />
+        <TweakSelect label="Heading font" value={t.headingFont}
+          options={["Fraunces", "DM Serif Display", "Playfair Display", "Instrument Serif", "Syne", "Bricolage Grotesque", "Anton"]}
+          onChange={v => setTweak("headingFont", v)} />
         <TweakSelect label="Display font" value={t.displayFont}
-          options={["Plus Jakarta Sans", "Sora", "Space Grotesk", "Instrument Serif"]}
+          options={["Clash Display", "Plus Jakarta Sans", "Sora", "Space Grotesk", "Instrument Serif"]}
           onChange={v => setTweak("displayFont", v)} />
         <TweakSlider label="Shadow offset" value={t.shadowOffset} min={0} max={16} unit="px"
           onChange={v => setTweak("shadowOffset", v)} />

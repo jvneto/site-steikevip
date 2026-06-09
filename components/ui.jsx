@@ -2,12 +2,6 @@
 
 import { useState, useEffect } from "react"
 
-// Neon glow helper — layered gold glow at multiple blur radii
-const neonGlow = (color, intensity = 1) =>
-  `0 0 ${Math.round(5 * intensity)}px ${color}55, 0 0 ${Math.round(15 * intensity)}px ${color}30, 0 0 ${Math.round(35 * intensity)}px ${color}18`
-
-const neonText = (color, off = 4) =>
-  `${off}px ${off}px 0 ${color}, 0 0 14px ${color}aa, 0 0 35px ${color}66, 0 0 70px ${color}33, 0 0 120px ${color}18`
 
 export function ProgressHeader({ pct, balance, t }) {
   const radius = t.corners === "sharp" ? 0 : t.corners === "soft" ? 4 : 999
@@ -62,13 +56,13 @@ export function Logo({ t }) {
         boxShadow: `0 0 10px ${t.goldTone}44, ${Math.max(2, t.shadowOffset / 3)}px ${Math.max(2, t.shadowOffset / 3)}px 0 0 #0B0A07`,
         border: `1px solid ${t.goldTone}55`,
       }}>
-        <span style={{ fontFamily: t.displayFont, fontSize: 18, color: "#0B0A07", fontWeight: 800, letterSpacing: "-.04em" }}>M</span>
+        <span style={{ fontFamily: t.displayFont, fontSize: 18, color: "#0B0A07", fontWeight: 800, letterSpacing: "-.04em" }}>S</span>
       </div>
       <div style={{
         fontFamily: t.displayFont, fontSize: "clamp(15px, 1.8vw, 20px)",
         letterSpacing: "-.02em", fontWeight: 600,
       }}>
-        Mestre<span style={{ color: t.goldTone, textShadow: `0 0 14px ${t.goldTone}55` }}>Bet</span>
+        Steike<span style={{ color: t.goldTone, textShadow: `0 0 14px ${t.goldTone}55` }}>Bet</span>
       </div>
     </div>
   )
@@ -83,7 +77,7 @@ export function Footer({ t }) {
         textAlign: "center",
       }}>
         <div style={{ fontFamily: t.displayFont, fontSize: 14, letterSpacing: "-.01em", fontWeight: 600, color: "rgba(255,255,255,.45)" }}>
-          Mestre<span style={{ color: t.goldTone, textShadow: `0 0 12px ${t.goldTone}44` }}>Bet</span>
+          Steike<span style={{ color: t.goldTone, textShadow: `0 0 12px ${t.goldTone}44` }}>Bet</span>
           <span style={{ marginLeft: 10, fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".22em", color: "rgba(255,255,255,.2)" }}>&copy; 2026</span>
         </div>
         <div style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: ".32em", color: "rgba(255,255,255,.2)", textTransform: "uppercase" }}>
@@ -262,21 +256,49 @@ export function Eyebrow({ children, t }) {
   )
 }
 
+// Per-heading-font treatment — each display face wants its own size/tracking/case
+const HEADING_STYLES = {
+  "Anton":               { stack: "'Anton', 'Oswald', 'Arial Narrow', sans-serif", weight: 400, upper: true,  ls: ".006em", lh: .9,   size: "clamp(46px, 7.2vw, 96px)" },
+  "Syne":                { stack: "'Syne', system-ui, sans-serif",                  weight: 800, upper: true,  ls: "-.01em", lh: .96,  size: "clamp(36px, 5.4vw, 72px)" },
+  "Fraunces":            { stack: "'Fraunces', 'Instrument Serif', Georgia, serif", weight: 600, upper: false, ls: "-.015em",lh: 1.0,  size: "clamp(42px, 6.2vw, 82px)" },
+  "DM Serif Display":    { stack: "'DM Serif Display', Georgia, serif",             weight: 400, upper: false, ls: "-.005em",lh: 1.02, size: "clamp(44px, 6.6vw, 88px)" },
+  "Playfair Display":    { stack: "'Playfair Display', Georgia, serif",             weight: 700, upper: false, ls: "-.005em",lh: 1.02, size: "clamp(42px, 6.2vw, 82px)" },
+  "Bricolage Grotesque": { stack: "'Bricolage Grotesque', system-ui, sans-serif",   weight: 800, upper: false, ls: "-.025em",lh: .96,  size: "clamp(38px, 5.6vw, 74px)" },
+  "Instrument Serif":    { stack: "'Instrument Serif', Georgia, serif",              weight: 400, upper: false, ls: "-.02em", lh: 1.02, size: "clamp(44px, 6.4vw, 84px)" },
+}
+
 export function H1({ children, t }) {
-  const isSerif = t.displayFont === "Instrument Serif"
-  const off = Math.max(3, Math.round(t.shadowOffset * 0.6))
+  const hf = t.headingFont || t.displayFont
+  const cfg = HEADING_STYLES[hf] || {
+    stack: `'${hf}', 'Space Grotesk', system-ui, sans-serif`,
+    weight: 700, upper: false, ls: "-.035em", lh: .98, size: "clamp(36px, 5.2vw, 68px)",
+  }
+  // Metallic gold gradient — champagne highlights over the brand gold and a
+  // bronze shadow band give the polished-metal sheen. Clipped to the text.
+  const metalGold = `linear-gradient(180deg, #BF953F 0%, #FCF6BA 24%, ${t.goldTone} 48%, #F7ECA6 70%, #9C7A22 100%)`
   return (
     <h1 className="mb-h1" style={{
-      fontFamily: t.displayFont,
-      fontSize: isSerif ? "clamp(44px, 6.4vw, 84px)" : "clamp(36px, 5.2vw, 68px)",
-      letterSpacing: isSerif ? "-.02em" : "-.035em",
-      lineHeight: isSerif ? 1.02 : .98,
-      margin: "0 0 12px",
-      fontWeight: isSerif ? 400 : 700,
+      fontFamily: cfg.stack,
+      fontSize: cfg.size,
+      letterSpacing: cfg.ls,
+      lineHeight: cfg.lh,
+      // Tight line-heights (<1) shrink the box below the glyph ink; the clipped
+      // gold gradient then has no fill behind ascenders/descenders and they
+      // render transparent ("cut off"). Pad the clip box and cancel it with a
+      // negative margin so the gradient covers the full glyph with zero layout shift.
+      padding: "0.24em 0",
+      margin: "-0.24em 0 calc(12px - 0.24em)",
+      fontWeight: cfg.weight,
+      textTransform: cfg.upper ? "uppercase" : "none",
       textWrap: "balance",
-      color: "#fff",
-      textShadow: neonText(t.goldTone, off),
-      "--gold-glow": `${t.goldTone}66`,
+      backgroundImage: metalGold,
+      WebkitBackgroundClip: "text",
+      backgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      color: "transparent",
+      // bevel for metal depth + a soft static gold halo (no animation = no flicker)
+      filter: `drop-shadow(0 1px 1px rgba(0,0,0,.38)) drop-shadow(0 0 18px ${t.goldTone}40)`,
+      "--gold-glow": `${t.goldTone}55`,
     }}>{children}</h1>
   )
 }
