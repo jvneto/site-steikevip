@@ -103,7 +103,7 @@ export function ScreenAge({ next, t }) {
     <ContentWrap>
       <Eyebrow t={t}>PASSO 01 &middot; PERFIL</Eyebrow>
       <H1 t={t}>Qual a sua <span style={{ color: t.goldTone }}>faixa et&aacute;ria</span>?</H1>
-      <Sub>Filtro importante pra Steike que quer faturar de verdade.</Sub>
+      <Sub>A jornada para o VIP come&ccedil;a por aqui.</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, maxWidth: 760 }}>
         {opts.map((o, i) => <OptionCard key={i} t={t} onClick={next} title={o.title} sub={o.sub} />)}
       </div>
@@ -123,7 +123,7 @@ export function ScreenFocus({ next, t }) {
     <ContentWrap>
       <Eyebrow t={t}>PASSO 02 &middot; INTEN&Ccedil;&Atilde;O</Eyebrow>
       <H1 t={t}>Qual seu <span style={{ color: t.goldTone }}>foco</span> pra faturar hoje?</H1>
-      <Sub>O que voc&ecirc; quer conquistar com a Banca Privada do Steike?</Sub>
+      <Sub>O que voc&ecirc; quer conquistar com o Grupo VIP do Steike?</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, maxWidth: 760 }}>
         {opts.map((o, i) => <OptionCard key={i} t={t} onClick={next} title={o.title} sub={o.sub} />)}
       </div>
@@ -314,14 +314,14 @@ export function ScreenRoleta({ next, t }) {
 // ─── Conquistas ──────────────────────────────────────────────────────────────
 export function ScreenConexao({ next, t }) {
   const wins = [
-    { img: "/conquistas/king-carros.jpg", title: "Porsche e Lambo no green", tag: "ENTRADA CERTA PAGOU" },
-    { img: "/conquistas/king-mansao.jpg", title: "A banca assinou essa casa", tag: "GREEN VIROU ESCRITURA" },
+    { img: "/conquistas/king-carros.jpg", title: "Os resultados falam por si mesmo.", tag: "ENTRADA CERTA PAGOU" },
+    { img: "/conquistas/king-mansao.jpg", title: "Mais que dinheiro, liberdade.", tag: "GREEN VIROU ESCRITURA" },
   ]
   return (
     <ContentWrap>
       <Eyebrow t={t}>CONQUISTAS</Eyebrow>
       <H1 t={t}>O que o <span style={{ color: t.goldTone }}>King</span> conquistou</H1>
-      <Sub>Tudo isso a banca colocou na minha vida. As fotos n&atilde;o mentem.</Sub>
+      <Sub>Transformando resultados em realiza&ccedil;&otilde;es.</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 22, maxWidth: 880, marginBottom: 32 }}>
         {wins.map((w, i) => (
           <div key={i} style={{
@@ -389,10 +389,19 @@ export function ScreenGreen({ next, t }) {
     <ContentWrap>
       <Eyebrow t={t}>RESULTADOS REAIS</Eyebrow>
       <H1 t={t}>S&oacute; <span style={{ color: t.goldTone }}>green</span> na conta.</H1>
-      <Sub>Essa &eacute; a rotina da nossa banca privada todo dia.</Sub>
+      <Sub>Essa &eacute; a rotina do nosso Grupo VIP.</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18, maxWidth: 880, marginBottom: 28 }}>
-        <BetSlip t={t} type="multi" />
-        <BetSlip t={t} type="single" />
+        {["green-01.jpeg", "green-02.jpeg"].map((src, i) => (
+          <div key={i} style={{
+            borderRadius: t.corners === "sharp" ? 0 : 14,
+            overflow: "hidden",
+            background: "#fff",
+            border: `1px solid ${t.goldTone}40`,
+            boxShadow: `0 0 20px ${t.goldTone}15, 0 4px 20px rgba(0,0,0,.3)`,
+          }}>
+            <img src={`/resultados/${src}`} alt="Comprovante de aposta green" style={{ display: "block", width: "100%", height: "auto" }} />
+          </div>
+        ))}
       </div>
       <div style={{ maxWidth: 880, width: "100%" }}>
         <PrimaryButton t={t} onClick={next}>QUERO ISSO A&Iacute;</PrimaryButton>
@@ -786,10 +795,10 @@ export function ScreenCheckout({ next, t, restart }) {
             boxShadow: `${t.shadowOffset}px ${t.shadowOffset}px 0 0 ${t.goldTone}, 0 0 25px ${t.goldTone}12, 0 0 50px ${t.goldTone}08`,
           }}>
             {[
-              ["Acesso vital\u00EDcio \u00E0 Banca Privada", "INCLUSO"],
-              ["Sinais di\u00E1rios direto no Telegram", "INCLUSO"],
-              ["Mentoria semanal ao vivo", "INCLUSO"],
-              ["Garantia incondicional 7 dias", "INCLUSO"],
+              ["Acesso Vital\u00EDcio ao Grupo VIP", "INCLUSO"],
+              ["Entradas Exclusivas todos os dias", "INCLUSO"],
+              ["Mentoria Semanal (Gest\u00E3o)", "INCLUSO"],
+              ["Pr\u00EAmios e Sorteios", "INCLUSO"],
             ].map(([k, v], i) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: i < 3 ? "1px solid rgba(255,255,255,.06)" : "none", fontSize: 15, letterSpacing: "-.005em" }}>
                 <span>{k}</span>
