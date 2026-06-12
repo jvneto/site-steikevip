@@ -64,7 +64,7 @@ export function ScreenWelcome({ next, t }) {
     <ContentWrap>
       <Eyebrow t={t}>BEM-VINDO, STEIKE</Eyebrow>
       <H1 t={t}>Voc&ecirc; &eacute; da <span style={{ color: t.goldTone }}>elite</span>?</H1>
-      <Sub>Escolha como quer ser identificado dentro da Banca Privada.</Sub>
+      <Sub>Escolha como quer ser identificado dentro do Grupo VIP.</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, maxWidth: 760 }}>
         <OptionCard t={t} onClick={next} title="Homem" sub="REI DA BANCA"
           icon={<Avatar t={t} kind="m" />} />
@@ -595,8 +595,8 @@ export function ScreenLast({ next, t }) {
   return (
     <ContentWrap>
       <Eyebrow t={t}>&Uacute;LTIMA CHAMADA</Eyebrow>
-      <H1 t={t}>Quase l&aacute;, <span style={{ color: t.goldTone }}>Steike</span>.</H1>
-      <Sub>O acesso &agrave; Banca Privada t&aacute; fechando. Vai ficar de fora?</Sub>
+      <H1 t={t}>Quase l&aacute;&hellip;</H1>
+      <Sub>O acesso ao Grupo VIP t&aacute; fechando. Vai ficar de fora?</Sub>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, maxWidth: 760 }}>
         {opts.map((o, i) => <OptionCard key={i} t={t} onClick={next} title={o.title} sub={o.sub} />)}
       </div>
