@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import { ContentWrap, Eyebrow, H1, Sub, OptionCard, PrimaryButton, Logo } from "./ui"
+import { checkout as apiCheckout } from "../lib/api"
+import { checkoutStore } from "../lib/checkout-store"
 
 // ─── Welcome ─────────────────────────────────────────────────────────────────
 export function ScreenWelcome({ next, t }) {
@@ -775,7 +777,54 @@ function VagasCounter({ t }) {
 // ─── Checkout ────────────────────────────────────────────────────────────────
 export function ScreenCheckout({ next, t, restart }) {
   const [tab, setTab] = useState("pix")
+  const [plan, setPlan] = useState(null)
+  const [form, setForm] = useState({ name: "", email: "", cpf: "", holder_name: "", number: "", exp_month: "", exp_year: "", cvv: "" })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const r = t.corners === "sharp" ? 0 : 14
+
+  // Carrega o primeiro plano ativo da API (a oferta do funil).
+  useEffect(() => {
+    import("../lib/api").then(({ getPlans }) =>
+      getPlans().then(plans => setPlan(plans[0] || null)).catch(() => {})
+    )
+  }, [])
+
+  const set = (patch) => { setForm(f => ({ ...f, ...patch })); setError(null) }
+
+  const submit = async () => {
+    setError(null)
+    if (tab === "boleto") { setError("Selecione PIX ou cartão para continuar."); return }
+    if (!form.name.trim() || !form.email.trim()) { setError("Preencha nome e e-mail."); return }
+    if (!plan) { setError("Não foi possível carregar o plano. Recarregue a página."); return }
+
+    const method = tab === "card" ? "credit_card" : "pix"
+    const payload = {
+      name: form.name, email: form.email, cpf: form.cpf || undefined,
+      plan_id: plan.id, method,
+    }
+    if (method === "credit_card") {
+      payload.card = {
+        holder_name: form.holder_name, number: form.number,
+        exp_month: Number(form.exp_month), exp_year: Number(form.exp_year), cvv: form.cvv,
+      }
+    }
+
+    setLoading(true)
+    try {
+      const result = await apiCheckout(payload)
+      checkoutStore.setForm({ name: form.name, email: form.email })
+      checkoutStore.setResult(result)
+      next()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const priceLabel = plan ? `R$ ${plan.price}` : "R$ 39,90"
+
   return (
     <div style={{ padding: "6vh 6vw 4vh", maxWidth: 1140, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
       <div style={{ marginBottom: 32 }}>
@@ -839,12 +888,18 @@ export function ScreenCheckout({ next, t, restart }) {
             ))}
           </div>
 
-          {tab === "pix" && <PixForm t={t} />}
-          {tab === "card" && <CardForm t={t} />}
+          {tab === "pix" && <PixForm t={t} form={form} set={set} />}
+          {tab === "card" && <CardForm t={t} form={form} set={set} />}
           {tab === "boleto" && <BoletoForm t={t} />}
 
-          <PrimaryButton t={t} large onClick={next} sub="PROCESSAMENTO SEGURO &middot; LASTLINK">
-            Pagar R$ 39,90
+          {error && (
+            <div style={{ padding: 12, marginBottom: 16, background: "rgba(229,72,77,.1)", border: "1px solid rgba(229,72,77,.4)", borderRadius: 8, fontSize: 13, color: "#ff8a8d" }}>
+              {error}
+            </div>
+          )}
+
+          <PrimaryButton t={t} large onClick={submit} sub="PROCESSAMENTO SEGURO &middot; SSL 256-BIT">
+            {loading ? "Processando…" : `Pagar ${priceLabel}`}
           </PrimaryButton>
 
           <div style={{ display: "flex", justifyContent: "center", gap: 14, marginTop: 24, fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".22em", color: "rgba(255,255,255,.5)" }}>
@@ -856,8 +911,8 @@ export function ScreenCheckout({ next, t, restart }) {
   )
 }
 
-function Input({ placeholder, t }) {
-  return <input placeholder={placeholder} style={{
+function Input({ placeholder, t, value, onChange, type = "text" }) {
+  return <input placeholder={placeholder} value={value} onChange={onChange} type={type} style={{
     width: "100%", boxSizing: "border-box",
     padding: "14px 16px", borderRadius: t.corners === "sharp" ? 0 : 8,
     background: "rgba(0,0,0,.4)", border: "1px solid rgba(255,255,255,.1)",
@@ -877,12 +932,12 @@ function Field({ label, t, children, full }) {
   )
 }
 
-function PixForm({ t }) {
+function PixForm({ t, form, set }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Seu nome" /></Field>
-      <Field label="E-MAIL" t={t}><Input t={t} placeholder="voce@email.com" /></Field>
-      <Field label="CPF" t={t}><Input t={t} placeholder="000.000.000-00" /></Field>
+      <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Seu nome" value={form.name} onChange={e => set({ name: e.target.value })} /></Field>
+      <Field label="E-MAIL" t={t}><Input t={t} type="email" placeholder="voce@email.com" value={form.email} onChange={e => set({ email: e.target.value })} /></Field>
+      <Field label="CPF" t={t}><Input t={t} placeholder="000.000.000-00" value={form.cpf} onChange={e => set({ cpf: e.target.value })} /></Field>
       <div style={{ padding: 12, background: `${t.goldTone}10`, border: `1px solid ${t.goldTone}40`, borderRadius: 8, fontSize: 12, color: "rgba(255,255,255,.7)" }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill={t.goldTone} style={{ flexShrink: 0, marginTop: 1 }}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Pagamento via PIX &eacute; aprovado em segundos. Seu acesso &eacute; liberado na hora.
       </div>
@@ -890,14 +945,16 @@ function PixForm({ t }) {
   )
 }
 
-function CardForm({ t }) {
+function CardForm({ t, form, set }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Como est\u00E1 no cart\u00E3o" /></Field>
-      <Field label="N\u00DAMERO DO CART\u00C3O" t={t}><Input t={t} placeholder="0000 0000 0000 0000" /></Field>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <Field label="VENCIMENTO" t={t}><Input t={t} placeholder="MM/AA" /></Field>
-        <Field label="CVV" t={t}><Input t={t} placeholder="000" /></Field>
+      <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Como est\u00E1 no cart\u00E3o" value={form.holder_name} onChange={e => set({ holder_name: e.target.value })} /></Field>
+      <Field label="E-MAIL" t={t}><Input t={t} type="email" placeholder="voce@email.com" value={form.email} onChange={e => set({ email: e.target.value })} /></Field>
+      <Field label="N\u00DAMERO DO CART\u00C3O" t={t}><Input t={t} placeholder="0000 0000 0000 0000" value={form.number} onChange={e => set({ number: e.target.value })} /></Field>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        <Field label="MM" t={t}><Input t={t} placeholder="MM" value={form.exp_month} onChange={e => set({ exp_month: e.target.value })} /></Field>
+        <Field label="AAAA" t={t}><Input t={t} placeholder="AAAA" value={form.exp_year} onChange={e => set({ exp_year: e.target.value })} /></Field>
+        <Field label="CVV" t={t}><Input t={t} placeholder="000" value={form.cvv} onChange={e => set({ cvv: e.target.value })} /></Field>
       </div>
     </div>
   )
@@ -906,11 +963,8 @@ function CardForm({ t }) {
 function BoletoForm({ t }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Seu nome" /></Field>
-      <Field label="CPF" t={t}><Input t={t} placeholder="000.000.000-00" /></Field>
-      <Field label="E-MAIL" t={t}><Input t={t} placeholder="voce@email.com" /></Field>
       <div style={{ padding: 12, background: "rgba(255,255,255,.04)", borderRadius: 8, fontSize: 12, color: "rgba(255,255,255,.55)" }}>
-        Compensa&ccedil;&atilde;o em at&eacute; 2 dias &uacute;teis. Pra acesso imediato use PIX.
+        Boleto indispon&iacute;vel no momento. Pra acesso imediato use <strong style={{ color: t.goldTone }}>PIX</strong> ou <strong style={{ color: t.goldTone }}>cart&atilde;o</strong>.
       </div>
     </div>
   )
@@ -919,10 +973,39 @@ function BoletoForm({ t }) {
 // ─── Success ─────────────────────────────────────────────────────────────────
 export function ScreenSuccess({ restart, t }) {
   const [show, setShow] = useState(false)
+  const [result, setResult] = useState(null)
+  const [telegram, setTelegram] = useState(null)
+  const [checking, setChecking] = useState(false)
+  const [copied, setCopied] = useState(false)
+
   useEffect(() => {
     const id = setTimeout(() => setShow(true), 300)
+    setResult(checkoutStore.get().result)
     return () => clearTimeout(id)
   }, [])
+
+  const payment = result?.payment
+  const token = result?.token
+  const pix = payment?.method === "pix" ? payment?.pix_qr_code : null
+
+  const refreshAccess = async () => {
+    if (!token) return
+    setChecking(true)
+    try {
+      const { getSubscription } = await import("../lib/api")
+      const data = await getSubscription(token)
+      setTelegram(data.telegram || null)
+    } catch {} finally {
+      setChecking(false)
+    }
+  }
+
+  const copyPix = () => {
+    if (!pix) return
+    navigator.clipboard?.writeText(pix)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <ContentWrap>
@@ -942,7 +1025,36 @@ export function ScreenSuccess({ restart, t }) {
 
         <H1 t={t}>Voc&ecirc; &eacute; da <span style={{ color: t.goldTone }}>banca</span>.</H1>
 
-        <Sub>Acesso liberado. Confirma no seu e-mail pra entrar no Telegram da fam&iacute;lia.</Sub>
+        <Sub>
+          {telegram?.invite_link
+            ? "Acesso liberado! Toque no botão abaixo pra entrar no grupo VIP."
+            : pix
+              ? "Quase lá! Pague o PIX abaixo pra liberar seu acesso ao Telegram."
+              : "Pedido recebido. Assim que o pagamento for confirmado, seu acesso ao Telegram é liberado."}
+        </Sub>
+
+        {/* Acesso ao Telegram (quando a assinatura estiver ativa) */}
+        {telegram?.invite_link && (
+          <a href={telegram.invite_link} target="_blank" rel="noreferrer" style={{ textDecoration: "none", width: "100%", maxWidth: 420 }}>
+            <PrimaryButton t={t} large sub="LINK DE USO ÚNICO · EXPIRA APÓS ENTRAR">
+              Entrar no grupo VIP
+            </PrimaryButton>
+          </a>
+        )}
+
+        {/* PIX copia e cola */}
+        {!telegram?.invite_link && pix && (
+          <div style={{ width: "100%", maxWidth: 460, padding: 20, background: "rgba(255,255,255,.025)", border: `1px solid ${t.goldTone}30`, borderRadius: 14 }}>
+            <div style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".22em", color: "rgba(255,255,255,.45)", marginBottom: 10 }}>PIX COPIA E COLA</div>
+            <div style={{ wordBreak: "break-all", fontSize: 12, color: "rgba(255,255,255,.8)", background: "rgba(0,0,0,.4)", padding: 12, borderRadius: 8, fontFamily: "'Geist Mono', ui-monospace, monospace", marginBottom: 12 }}>{pix}</div>
+            <button onClick={copyPix} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${t.goldTone}`, background: `${t.goldTone}15`, color: t.goldTone, cursor: "pointer", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11, letterSpacing: ".18em", marginBottom: 10 }}>
+              {copied ? "COPIADO!" : "COPIAR CÓDIGO PIX"}
+            </button>
+            <button onClick={refreshAccess} disabled={checking} style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid rgba(255,255,255,.15)", background: "transparent", color: "rgba(255,255,255,.7)", cursor: "pointer", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11, letterSpacing: ".18em" }}>
+              {checking ? "VERIFICANDO…" : "JÁ PAGUEI · LIBERAR ACESSO"}
+            </button>
+          </div>
+        )}
 
         {/* Summary card */}
         <div style={{
