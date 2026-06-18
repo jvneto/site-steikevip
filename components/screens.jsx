@@ -21,23 +21,11 @@ export function ScreenWelcome({ next, t }) {
           flex: 1, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 24, minHeight: "50vh",
         }}>
-          {/* Splash logo */}
-          <div className="mb-splash-logo" style={{
-            width: 80, height: 80,
-            borderRadius: t.corners === "sharp" ? 0 : 16,
-            background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}cc)`,
-            display: "grid", placeItems: "center",
-            boxShadow: `0 0 30px ${t.goldTone}55, 0 0 70px ${t.goldTone}22, 0 0 120px ${t.goldTone}11`,
-            border: `1px solid ${t.goldTone}66`,
-          }}>
-            <span style={{ fontFamily: t.displayFont, fontSize: 40, color: "#0B0A07", fontWeight: 800, letterSpacing: "-.04em" }}>S</span>
-          </div>
-          <div className="mb-splash-text" style={{
-            fontFamily: t.displayFont, fontSize: 28, fontWeight: 600,
-            letterSpacing: "-.02em", textAlign: "center",
-          }}>
-            Steike<span style={{ color: t.goldTone, textShadow: `0 0 14px ${t.goldTone}66` }}>Bet</span>
-          </div>
+          {/* Splash logo — emblema grande como protagonista */}
+          <img className="mb-splash-logo" src="/steike.png" alt="Steike VIP" style={{
+            height: "clamp(170px, 36vw, 280px)", width: "auto", objectFit: "contain",
+            filter: `drop-shadow(0 0 40px ${t.goldTone}66)`,
+          }} />
           <div className="mb-splash-sub" style={{
             fontFamily: "'Geist Mono', ui-monospace, monospace",
             fontSize: 10, letterSpacing: ".32em",
@@ -649,7 +637,55 @@ export function ScreenAnalyzing({ next, t }) {
 // ─── VSL ─────────────────────────────────────────────────────────────────────
 export function ScreenVSL({ next, t }) {
   const [playing, setPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [muted, setMuted] = useState(true)
+  const [showCTA, setShowCTA] = useState(false)
+  const videoRef = useRef(null)
   const r = t.corners === "sharp" ? 0 : 22
+
+  // Quantos segundos antes do fim o botão "Garantir vaga" aparece.
+  // (o vídeo atual tem ~52s, por isso em segundos; aumente se trocar por um vídeo longo)
+  const REVEAL_BEFORE_END_SEC = 15
+
+  // Autoplay garantido: começa no mudo (sempre permitido) e tenta ligar o som.
+  // Se o som for bloqueado pelo navegador, segue tocando no mudo + botão "Ativar som".
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    const start = async () => {
+      try {
+        await v.play()            // autoplay no mudo — sempre permitido
+        v.muted = false           // tenta ligar o som
+        await v.play()
+        setMuted(false)
+      } catch {
+        v.muted = true
+        setMuted(true)
+        v.play().catch(() => {})  // garante que continua tocando no mudo
+      }
+    }
+    start()
+  }, [])
+
+  const togglePlay = () => {
+    const v = videoRef.current
+    if (!v) return
+    if (v.paused) { v.muted = false; setMuted(false); v.play().catch(() => {}) }
+    else v.pause()
+  }
+  const onTime = (e) => {
+    const v = e.target
+    setProgress(v.duration ? (v.currentTime / v.duration) * 100 : 0)
+    if (v.duration && v.duration - v.currentTime <= REVEAL_BEFORE_END_SEC) setShowCTA(true)
+  }
+  const enableSound = (e) => {
+    e.stopPropagation()
+    const v = videoRef.current
+    if (!v) return
+    v.muted = false
+    setMuted(false)
+    if (v.paused) v.play()
+  }
   return (
     <ContentWrap>
       <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -669,32 +705,69 @@ export function ScreenVSL({ next, t }) {
           "--gold-glow": `${t.goldTone}55`,
           "--gold-border": `${t.goldTone}88`,
           "--gold-border-bright": `${t.goldTone}bb`,
-        }} onClick={() => setPlaying(p => !p)}>
-          <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse 60% 50% at 50% 45%, ${t.goldTone}08, transparent 70%), linear-gradient(135deg, #12100c 0%, #0d0b08 50%, #100e0a 100%)`, display: "grid", placeItems: "center" }}>
-            <div className="mb-play-pulse" style={{ width: 72, height: 72, borderRadius: 999, background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}cc)`, display: "grid", placeItems: "center", boxShadow: `0 0 20px ${t.goldTone}55, 0 0 50px ${t.goldTone}22, 6px 6px 0 0 #0B0A07`, "--gold-glow": `${t.goldTone}55` }}>
-              <div style={{ width: 0, height: 0, borderLeft: "18px solid #0B0A07", borderTop: "12px solid transparent", borderBottom: "12px solid transparent", marginLeft: 4 }} />
+        }} onClick={togglePlay}>
+          <video
+            ref={videoRef}
+            src="/steike-vsl.mp4"
+            autoPlay
+            muted={muted}
+            playsInline
+            preload="auto"
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onEnded={() => { setPlaying(false); setShowCTA(true) }}
+            onTimeUpdate={onTime}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+          {!playing && (
+            <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse 60% 50% at 50% 45%, ${t.goldTone}08, transparent 70%), linear-gradient(135deg, #12100c 0%, #0d0b08 50%, #100e0a 100%)`, display: "grid", placeItems: "center" }}>
+              <div className="mb-play-pulse" style={{ width: 72, height: 72, borderRadius: 999, background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}cc)`, display: "grid", placeItems: "center", boxShadow: `0 0 20px ${t.goldTone}55, 0 0 50px ${t.goldTone}22, 6px 6px 0 0 #0B0A07`, "--gold-glow": `${t.goldTone}55` }}>
+                <div style={{ width: 0, height: 0, borderLeft: "18px solid #0B0A07", borderTop: "12px solid transparent", borderBottom: "12px solid transparent", marginLeft: 4 }} />
+              </div>
+              <div style={{ position: "absolute", bottom: 18, left: 0, right: 0, textAlign: "center", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, color: "rgba(255,255,255,.35)", letterSpacing: ".22em" }}>
+                VSL &middot; MENSAGEM DO STEIKE
+              </div>
             </div>
-            <div style={{ position: "absolute", bottom: 18, left: 0, right: 0, textAlign: "center", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, color: "rgba(255,255,255,.35)", letterSpacing: ".22em" }}>
-              VSL &middot; MENSAGEM DO STEIKE
-            </div>
-          </div>
+          )}
+          {muted && (
+            <button onClick={enableSound} className="mb-play-pulse" style={{
+              position: "absolute", top: 12, right: 12, zIndex: 2,
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "8px 13px", borderRadius: 999, cursor: "pointer",
+              background: t.goldTone, color: "#0B0A07", border: "none",
+              fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, fontWeight: 700, letterSpacing: ".12em",
+              boxShadow: `0 0 18px ${t.goldTone}66, 4px 4px 0 0 #0B0A07`,
+              "--gold-glow": `${t.goldTone}66`,
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#0B0A07"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1c2.9.9 5 3.5 5 6.7s-2.1 5.8-5 6.7v2.1c4-.9 7-4.5 7-8.8s-3-7.9-7-8.8z"/></svg>
+              ATIVAR SOM
+            </button>
+          )}
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 4, background: "rgba(255,255,255,.1)" }}>
-            <div style={{ height: "100%", width: playing ? "62%" : "5%", background: t.goldTone, transition: "width .4s" }} />
+            <div style={{ height: "100%", width: `${progress}%`, background: t.goldTone, transition: "width .2s" }} />
           </div>
         </div>
       </div>
       <div style={{ maxWidth: 760, margin: "0 auto", width: "100%" }}>
-        <PrimaryButton t={t} large onClick={next} sub="ACESSO IMEDIATO &Agrave; BANCA PRIVADA">
-          GARANTIR MINHA VAGA AGORA
-        </PrimaryButton>
-        <div style={{ textAlign: "center", marginTop: 22, fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".28em", color: "rgba(255,255,255,.45)" }}>
-          PAGAMENTO 100% SEGURO &middot; ACESSO IMEDIATO
-        </div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 18, opacity: .55 }}>
-          {["VISA", "MASTER", "PIX", "BOLETO"].map(b => (
-            <div key={b} style={{ padding: "8px 14px", border: "1px solid rgba(255,255,255,.15)", borderRadius: 4, fontSize: 10, letterSpacing: ".22em", fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{b}</div>
-          ))}
-        </div>
+        {showCTA ? (
+          <div className="mb-screen-enter">
+            <PrimaryButton t={t} large onClick={next} sub="ACESSO IMEDIATO &Agrave; BANCA PRIVADA">
+              GARANTIR MINHA VAGA AGORA
+            </PrimaryButton>
+            <div style={{ textAlign: "center", marginTop: 22, fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".28em", color: "rgba(255,255,255,.45)" }}>
+              PAGAMENTO 100% SEGURO &middot; ACESSO IMEDIATO
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 18, opacity: .55 }}>
+              {["VISA", "MASTER", "PIX", "BOLETO"].map(b => (
+                <div key={b} style={{ padding: "8px 14px", border: "1px solid rgba(255,255,255,.15)", borderRadius: 4, fontSize: 10, letterSpacing: ".22em", fontFamily: "'Geist Mono', ui-monospace, monospace" }}>{b}</div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "16px 0", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11, letterSpacing: ".22em", color: "rgba(255,255,255,.4)" }}>
+            ASSISTA AT&Eacute; O FINAL PRA LIBERAR SUA VAGA
+          </div>
+        )}
       </div>
     </ContentWrap>
   )

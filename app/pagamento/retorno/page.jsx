@@ -56,7 +56,7 @@ export default function PagamentoRetorno() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={card}>
         <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em", marginBottom: 6 }}>
-          steike<span style={{ color: GOLD }}>bet</span>
+          steike <span style={{ color: GOLD }}>VIP</span>
         </div>
 
         {!token && (

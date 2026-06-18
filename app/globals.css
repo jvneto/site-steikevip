@@ -268,3 +268,13 @@ body::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,.4); }
     font-size: clamp(28px, 7vw, 44px) !important;
   }
 }
+
+/* ─── Logo responsive ────────────────────────────── */
+
+.mb-logo-desktop { display: block; }
+.mb-logo-mobile { display: none; }
+
+@media (max-width: 480px) {
+  .mb-logo-desktop { display: none !important; }
+  .mb-logo-mobile { display: block !important; }
+}

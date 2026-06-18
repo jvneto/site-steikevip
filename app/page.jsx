@@ -115,37 +115,6 @@ export default function Home() {
       <RewardLayer rewards={rewards} t={t} />
       <Confetti key={confettiKey} active={confettiKey > 0} t={t} />
       <LevelToast rank={levelUpRank} t={t} onDone={() => setLevelUpRank(null)} />
-
-      <TweaksPanel>
-        <TweakSection label="Game" />
-        <TweakToggle label="Modo gamificado" value={t.gameMode}
-          onChange={v => setTweak("gameMode", v)} />
-        <TweakSection label="Brand" />
-        <TweakColor label="Gold tone" value={t.goldTone}
-          options={GOLD_OPTIONS}
-          onChange={v => setTweak("goldTone", v)} />
-        <TweakSelect label="Heading font" value={t.headingFont}
-          options={["Fraunces", "DM Serif Display", "Playfair Display", "Instrument Serif", "Syne", "Bricolage Grotesque", "Anton"]}
-          onChange={v => setTweak("headingFont", v)} />
-        <TweakSelect label="Display font" value={t.displayFont}
-          options={["Clash Display", "Plus Jakarta Sans", "Sora", "Space Grotesk", "Instrument Serif"]}
-          onChange={v => setTweak("displayFont", v)} />
-        <TweakSlider label="Shadow offset" value={t.shadowOffset} min={0} max={16} unit="px"
-          onChange={v => setTweak("shadowOffset", v)} />
-        <TweakSection label="Components" />
-        <TweakRadio label="Button" value={t.buttonStyle}
-          options={["solid", "outline", "glow"]}
-          onChange={v => setTweak("buttonStyle", v)} />
-        <TweakRadio label="Corners" value={t.corners}
-          options={["sharp", "soft", "rounded"]}
-          onChange={v => setTweak("corners", v)} />
-        <TweakRadio label="Density" value={t.density}
-          options={["compact", "regular", "comfy"]}
-          onChange={v => setTweak("density", v)} />
-        <TweakSection label="Texture" />
-        <TweakToggle label="Film grain" value={t.showGrain}
-          onChange={v => setTweak("showGrain", v)} />
-      </TweaksPanel>
     </>
   )
 }

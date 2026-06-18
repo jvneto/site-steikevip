@@ -47,24 +47,9 @@ export function ProgressHeader({ pct, balance, t }) {
 
 export function Logo({ t }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <div style={{
-        width: 34, height: 34,
-        borderRadius: t.corners === "sharp" ? 0 : 8,
-        background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}cc)`,
-        display: "grid", placeItems: "center",
-        boxShadow: `0 0 10px ${t.goldTone}44, ${Math.max(2, t.shadowOffset / 3)}px ${Math.max(2, t.shadowOffset / 3)}px 0 0 #0B0A07`,
-        border: `1px solid ${t.goldTone}55`,
-      }}>
-        <span style={{ fontFamily: t.displayFont, fontSize: 18, color: "#0B0A07", fontWeight: 800, letterSpacing: "-.04em" }}>S</span>
-      </div>
-      <div style={{
-        fontFamily: t.displayFont, fontSize: "clamp(15px, 1.8vw, 20px)",
-        letterSpacing: "-.02em", fontWeight: 600,
-      }}>
-        Steike<span style={{ color: t.goldTone, textShadow: `0 0 14px ${t.goldTone}55` }}>Bet</span>
-      </div>
-    </div>
+    <img src="/horizontal.png" alt="Steike VIP" style={{
+      height: "clamp(58px, 6vw, 80px)", width: "auto", objectFit: "contain", display: "block",
+    }} />
   )
 }
 
@@ -77,7 +62,7 @@ export function Footer({ t }) {
         textAlign: "center",
       }}>
         <div style={{ fontFamily: t.displayFont, fontSize: 14, letterSpacing: "-.01em", fontWeight: 600, color: "rgba(255,255,255,.45)" }}>
-          Steike<span style={{ color: t.goldTone, textShadow: `0 0 12px ${t.goldTone}44` }}>Bet</span>
+          Steike <span style={{ color: t.goldTone, textShadow: `0 0 12px ${t.goldTone}44` }}>VIP</span>
           <span style={{ marginLeft: 10, fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".22em", color: "rgba(255,255,255,.2)" }}>&copy; 2026</span>
         </div>
         <div style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: ".32em", color: "rgba(255,255,255,.2)", textTransform: "uppercase" }}>
