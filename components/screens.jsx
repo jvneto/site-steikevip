@@ -848,18 +848,30 @@ function VagasCounter({ t }) {
 }
 
 // ─── Checkout ────────────────────────────────────────────────────────────────
+const METHOD_LABELS = { pix: "PIX", credit_card: "CARTÃO" }
+// Plano que o funil vende. Defina NEXT_PUBLIC_CHECKOUT_PLAN_SLUG no .env.local
+// para fixar um plano; senão usa o primeiro plano ativo retornado pela API.
+const CHECKOUT_PLAN_SLUG = process.env.NEXT_PUBLIC_CHECKOUT_PLAN_SLUG
+
 export function ScreenCheckout({ next, t, restart }) {
-  const [tab, setTab] = useState("pix")
+  const [tab, setTab] = useState("")
   const [plan, setPlan] = useState(null)
-  const [form, setForm] = useState({ name: "", email: "", cpf: "", holder_name: "", number: "", exp_month: "", exp_year: "", cvv: "" })
+  const [form, setForm] = useState({ name: "", email: "", cpf: "", phone: "", holder_name: "", number: "", exp_month: "", exp_year: "", cvv: "", postal_code: "", address_number: "" })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const r = t.corners === "sharp" ? 0 : 14
 
-  // Carrega o primeiro plano ativo da API (a oferta do funil).
+  const methods = plan?.payment_methods || []
+
+  // Carrega o plano do funil e já seleciona o 1º método que ele aceita.
   useEffect(() => {
     import("../lib/api").then(({ getPlans }) =>
-      getPlans().then(plans => setPlan(plans[0] || null)).catch(() => {})
+      getPlans().then(plans => {
+        const chosen = (CHECKOUT_PLAN_SLUG && plans.find(p => p.slug === CHECKOUT_PLAN_SLUG)) || plans[0] || null
+        setPlan(chosen)
+        const ms = chosen?.payment_methods || []
+        if (ms.length) setTab(ms[0])
+      }).catch(() => setError("Não foi possível carregar os planos."))
     )
   }, [])
 
@@ -867,19 +879,26 @@ export function ScreenCheckout({ next, t, restart }) {
 
   const submit = async () => {
     setError(null)
-    if (tab === "boleto") { setError("Selecione PIX ou cartão para continuar."); return }
-    if (!form.name.trim() || !form.email.trim()) { setError("Preencha nome e e-mail."); return }
     if (!plan) { setError("Não foi possível carregar o plano. Recarregue a página."); return }
+    if (!tab) { setError("Selecione uma forma de pagamento."); return }
+    if (!form.name.trim() || !form.email.trim()) { setError("Preencha nome e e-mail."); return }
 
-    const method = tab === "card" ? "credit_card" : "pix"
+    const method = tab // já é "pix" ou "credit_card"
+    if (method === "pix" && !form.cpf.trim()) { setError("Informe seu CPF para pagar via PIX."); return }
+    if (method === "credit_card" && (!form.cpf.trim() || !form.phone.trim() || !form.postal_code.trim() || !form.address_number.trim())) {
+      setError("Para cartão, preencha CPF, telefone, CEP e número."); return
+    }
+
     const payload = {
-      name: form.name, email: form.email, cpf: form.cpf || undefined,
+      name: form.name, email: form.email, cpf: form.cpf || undefined, phone: form.phone || undefined,
       plan_id: plan.id, method,
     }
     if (method === "credit_card") {
       payload.card = {
         holder_name: form.holder_name, number: form.number,
         exp_month: Number(form.exp_month), exp_year: Number(form.exp_year), cvv: form.cvv,
+        cpf: form.cpf, phone: form.phone,
+        postal_code: form.postal_code, address_number: form.address_number,
       }
     }
 
@@ -937,7 +956,10 @@ export function ScreenCheckout({ next, t, restart }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 20 }}>
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".28em", color: "rgba(255,255,255,.5)" }}>TOTAL HOJE</span>
                 <span style={{ fontFamily: t.displayFont, fontSize: 60, fontWeight: 700, color: t.goldTone, letterSpacing: "-.035em", lineHeight: 1, fontFeatureSettings: '"tnum"', textShadow: `0 0 20px ${t.goldTone}88, 0 0 45px ${t.goldTone}44, 0 0 80px ${t.goldTone}22, 0 0 120px ${t.goldTone}11` }}>
-                  R$ 39<span style={{ fontSize: 28, opacity: .85 }}>,90</span>
+                  {(() => {
+                    const [reais, cents] = (plan?.price || "39,90").split(",")
+                    return <>R$ {reais}<span style={{ fontSize: 28, opacity: .85 }}>,{cents}</span></>
+                  })()}
                 </span>
               </div>
             </div>
@@ -947,23 +969,28 @@ export function ScreenCheckout({ next, t, restart }) {
         {/* Payment */}
         <div style={{ background: "rgba(255,255,255,.025)", border: "1px solid rgba(255,255,255,.08)", borderRadius: r, padding: 28 }}>
           <div style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".28em", color: "rgba(255,255,255,.45)", marginBottom: 18 }}>FORMA DE PAGAMENTO</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 26 }}>
-            {[["pix", "PIX"], ["card", "CART\u00C3O"], ["boleto", "BOLETO"]].map(([id, label]) => (
-              <button key={id} onClick={() => setTab(id)} style={{
-                padding: "14px 8px", borderRadius: 8,
-                border: tab === id ? `1px solid ${t.goldTone}` : "1px solid rgba(255,255,255,.1)",
-                background: tab === id ? `${t.goldTone}15` : "transparent",
-                color: tab === id ? t.goldTone : "rgba(255,255,255,.65)",
-                cursor: "pointer", fontFamily: "'Geist Mono', ui-monospace, monospace",
-                fontSize: 11, letterSpacing: ".22em", fontWeight: 500,
-                transition: "all .2s",
-              }}>{label}</button>
-            ))}
-          </div>
+          {methods.length > 0 ? (
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(${methods.length}, 1fr)`, gap: 8, marginBottom: 26 }}>
+              {methods.map((id) => (
+                <button key={id} onClick={() => { setTab(id); setError(null) }} style={{
+                  padding: "14px 8px", borderRadius: 8,
+                  border: tab === id ? `1px solid ${t.goldTone}` : "1px solid rgba(255,255,255,.1)",
+                  background: tab === id ? `${t.goldTone}15` : "transparent",
+                  color: tab === id ? t.goldTone : "rgba(255,255,255,.65)",
+                  cursor: "pointer", fontFamily: "'Geist Mono', ui-monospace, monospace",
+                  fontSize: 11, letterSpacing: ".22em", fontWeight: 500,
+                  transition: "all .2s",
+                }}>{METHOD_LABELS[id] || id}</button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ marginBottom: 26, fontSize: 13, color: "rgba(255,255,255,.55)" }}>
+              {plan ? "Nenhuma forma de pagamento dispon\u00EDvel para este plano." : "Carregando\u2026"}
+            </div>
+          )}
 
           {tab === "pix" && <PixForm t={t} form={form} set={set} />}
-          {tab === "card" && <CardForm t={t} form={form} set={set} />}
-          {tab === "boleto" && <BoletoForm t={t} />}
+          {tab === "credit_card" && <CardForm t={t} form={form} set={set} />}
 
           {error && (
             <div style={{ padding: 12, marginBottom: 16, background: "rgba(229,72,77,.1)", border: "1px solid rgba(229,72,77,.4)", borderRadius: 8, fontSize: 13, color: "#ff8a8d" }}>
@@ -1021,13 +1048,21 @@ function PixForm({ t, form, set }) {
 function CardForm({ t, form, set }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Como est\u00E1 no cart\u00E3o" value={form.holder_name} onChange={e => set({ holder_name: e.target.value })} /></Field>
+      <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Como est\u00E1 no cart\u00E3o" value={form.holder_name} onChange={e => set({ holder_name: e.target.value, name: form.name || e.target.value })} /></Field>
       <Field label="E-MAIL" t={t}><Input t={t} type="email" placeholder="voce@email.com" value={form.email} onChange={e => set({ email: e.target.value })} /></Field>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <Field label="CPF DO TITULAR" t={t}><Input t={t} placeholder="000.000.000-00" value={form.cpf} onChange={e => set({ cpf: e.target.value })} /></Field>
+        <Field label="TELEFONE (DDD)" t={t}><Input t={t} placeholder="(48) 99999-9999" value={form.phone} onChange={e => set({ phone: e.target.value })} /></Field>
+      </div>
       <Field label="N\u00DAMERO DO CART\u00C3O" t={t}><Input t={t} placeholder="0000 0000 0000 0000" value={form.number} onChange={e => set({ number: e.target.value })} /></Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <Field label="MM" t={t}><Input t={t} placeholder="MM" value={form.exp_month} onChange={e => set({ exp_month: e.target.value })} /></Field>
         <Field label="AAAA" t={t}><Input t={t} placeholder="AAAA" value={form.exp_year} onChange={e => set({ exp_year: e.target.value })} /></Field>
         <Field label="CVV" t={t}><Input t={t} placeholder="000" value={form.cvv} onChange={e => set({ cvv: e.target.value })} /></Field>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <Field label="CEP DO TITULAR" t={t}><Input t={t} placeholder="00000-000" value={form.postal_code} onChange={e => set({ postal_code: e.target.value })} /></Field>
+        <Field label="N\u00DAMERO (ENDERE\u00C7O)" t={t}><Input t={t} placeholder="123" value={form.address_number} onChange={e => set({ address_number: e.target.value })} /></Field>
       </div>
     </div>
   )
