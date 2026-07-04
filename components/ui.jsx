@@ -68,6 +68,15 @@ export function Footer({ t }) {
         <div style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: ".32em", color: "rgba(255,255,255,.2)", textTransform: "uppercase" }}>
           A ELITE DAS APOSTAS
         </div>
+        <a href="/resgatar" style={{
+          fontFamily: "'Geist Mono', ui-monospace, monospace",
+          fontSize: 10, letterSpacing: ".2em",
+          color: t.goldTone, textDecoration: "none",
+          border: `1px solid ${t.goldTone}40`, borderRadius: 8,
+          padding: "8px 14px", marginTop: 2,
+        }}>
+          JÁ COMPREI · RESGATAR GRUPO VIP
+        </a>
       </div>
     </div>
   )
