@@ -5,6 +5,16 @@ import { ContentWrap, Eyebrow, H1, Sub, OptionCard, PrimaryButton, Logo } from "
 import { checkout as apiCheckout, createLead } from "../lib/api"
 import { checkoutStore } from "../lib/checkout-store"
 
+// Máscara de telefone brasileiro: (48) 99999-9999 / (48) 9999-9999
+function maskBRPhone(v) {
+  const d = (v || "").replace(/\D/g, "").slice(0, 11)
+  if (!d) return ""
+  if (d.length <= 2) return `(${d}`
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+}
+
 // ─── Welcome ─────────────────────────────────────────────────────────────────
 export function ScreenWelcome({ next, t }) {
   const [showContent, setShowContent] = useState(false)
@@ -880,7 +890,7 @@ export function ScreenCheckout({ next, t, restart }) {
       setForm(f => ({
         ...f,
         name: f.name || lead.name || "",
-        phone: f.phone || lead.whatsapp || "",
+        phone: f.phone || maskBRPhone(lead.whatsapp) || "",
         holder_name: f.holder_name || lead.name || "",
       }))
     }
@@ -1067,7 +1077,7 @@ function CardForm({ t, form, set }) {
       <Field label="E-MAIL" t={t}><Input t={t} type="email" placeholder="voce@email.com" value={form.email} onChange={e => set({ email: e.target.value })} /></Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Field label="CPF DO TITULAR" t={t}><Input t={t} placeholder="000.000.000-00" value={form.cpf} onChange={e => set({ cpf: e.target.value })} /></Field>
-        <Field label="TELEFONE (DDD)" t={t}><Input t={t} placeholder="(48) 99999-9999" value={form.phone} onChange={e => set({ phone: e.target.value })} /></Field>
+        <Field label="TELEFONE (DDD)" t={t}><Input t={t} type="tel" placeholder="(48) 99999-9999" value={form.phone} onChange={e => set({ phone: maskBRPhone(e.target.value) })} /></Field>
       </div>
       <Field label="N\u00DAMERO DO CART\u00C3O" t={t}><Input t={t} placeholder="0000 0000 0000 0000" value={form.number} onChange={e => set({ number: e.target.value })} /></Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
@@ -1218,7 +1228,7 @@ export function ScreenLead({ next, t }) {
     const lead = checkoutStore.getLead()
     if (lead?.name && lead?.whatsapp) {
       setName(lead.name)
-      setWhatsapp(lead.whatsapp)
+      setWhatsapp(maskBRPhone(lead.whatsapp))
     }
   }, [])
 
@@ -1252,7 +1262,7 @@ export function ScreenLead({ next, t }) {
           <Input t={t} placeholder="Como quer ser chamado" value={name} onChange={e => { setName(e.target.value); setError(null) }} />
         </Field>
         <Field label="WHATSAPP (DDD)" t={t}>
-          <Input t={t} placeholder="(48) 99999-9999" value={whatsapp} onChange={e => { setWhatsapp(e.target.value); setError(null) }} />
+          <Input t={t} type="tel" placeholder="(48) 99999-9999" value={whatsapp} onChange={e => { setWhatsapp(maskBRPhone(e.target.value)); setError(null) }} />
         </Field>
 
         {error && (
