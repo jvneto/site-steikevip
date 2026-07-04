@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { ContentWrap, Eyebrow, H1, Sub, OptionCard, PrimaryButton, Logo } from "./ui"
 import { checkout as apiCheckout, createLead } from "../lib/api"
 import { checkoutStore } from "../lib/checkout-store"
-import { maskBRPhone, maskCPF, isValidCPF } from "../lib/br"
+import { maskBRPhone, maskCPF, isValidCPF, maskCardNumber, isValidCardNumber, isValidCardExpiry, maskCEP } from "../lib/br"
 
 // ─── Welcome ─────────────────────────────────────────────────────────────────
 export function ScreenWelcome({ next, t }) {
@@ -897,8 +897,13 @@ export function ScreenCheckout({ next, t, restart }) {
 
     const method = tab // já é "pix" ou "credit_card"
     if (!isValidCPF(form.cpf)) { setError("CPF inválido. Confira os números digitados."); return }
-    if (method === "credit_card" && (!form.phone.trim() || !form.postal_code.trim() || !form.address_number.trim())) {
-      setError("Para cartão, preencha telefone, CEP e número."); return
+    if (method === "credit_card") {
+      if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) { setError("Informe o telefone do titular com DDD."); return }
+      if (!isValidCardNumber(form.number)) { setError("Número de cartão inválido. Confira os dígitos."); return }
+      if (!isValidCardExpiry(form.exp_month, form.exp_year)) { setError("Validade do cartão inválida ou vencida (MM / AAAA)."); return }
+      if (form.cvv.length < 3) { setError("CVV inválido (3 ou 4 números)."); return }
+      if (form.postal_code.replace(/\D/g, "").length !== 8) { setError("CEP inválido. Use o formato 00000-000."); return }
+      if (!form.address_number.trim()) { setError("Informe o número do endereço do titular."); return }
     }
 
     const payload = {
@@ -908,7 +913,7 @@ export function ScreenCheckout({ next, t, restart }) {
     }
     if (method === "credit_card") {
       payload.card = {
-        holder_name: form.holder_name, number: form.number,
+        holder_name: form.holder_name, number: form.number.replace(/\D/g, ""),
         exp_month: Number(form.exp_month), exp_year: Number(form.exp_year), cvv: form.cvv,
         cpf: form.cpf, phone: form.phone,
         postal_code: form.postal_code, address_number: form.address_number,
@@ -1064,21 +1069,21 @@ function PixForm({ t, form, set }) {
 function CardForm({ t, form, set }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Como est\u00E1 no cart\u00E3o" value={form.holder_name} onChange={e => set({ holder_name: e.target.value, name: form.name || e.target.value })} /></Field>
+      <Field label={"NOME COMPLETO"} t={t}><Input t={t} placeholder={"Como está no cartão"} value={form.holder_name} onChange={e => set({ holder_name: e.target.value, name: form.name || e.target.value })} /></Field>
       <Field label="E-MAIL" t={t}><Input t={t} type="email" placeholder="voce@email.com" value={form.email} onChange={e => set({ email: e.target.value })} /></Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Field label="CPF DO TITULAR" t={t}><Input t={t} type="tel" placeholder="000.000.000-00" value={form.cpf} onChange={e => set({ cpf: maskCPF(e.target.value) })} /></Field>
         <Field label="TELEFONE (DDD)" t={t}><Input t={t} type="tel" placeholder="(48) 99999-9999" value={form.phone} onChange={e => set({ phone: maskBRPhone(e.target.value) })} /></Field>
       </div>
-      <Field label="N\u00DAMERO DO CART\u00C3O" t={t}><Input t={t} placeholder="0000 0000 0000 0000" value={form.number} onChange={e => set({ number: e.target.value })} /></Field>
+      <Field label={"NÚMERO DO CARTÃO"} t={t}><Input t={t} type="tel" placeholder="0000 0000 0000 0000" value={form.number} onChange={e => set({ number: maskCardNumber(e.target.value) })} /></Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-        <Field label="MM" t={t}><Input t={t} placeholder="MM" value={form.exp_month} onChange={e => set({ exp_month: e.target.value })} /></Field>
-        <Field label="AAAA" t={t}><Input t={t} placeholder="AAAA" value={form.exp_year} onChange={e => set({ exp_year: e.target.value })} /></Field>
-        <Field label="CVV" t={t}><Input t={t} placeholder="000" value={form.cvv} onChange={e => set({ cvv: e.target.value })} /></Field>
+        <Field label={"MÊS (MM)"} t={t}><Input t={t} type="tel" placeholder="MM" value={form.exp_month} onChange={e => set({ exp_month: e.target.value.replace(/\D/g, "").slice(0, 2) })} /></Field>
+        <Field label="ANO (AAAA)" t={t}><Input t={t} type="tel" placeholder="AAAA" value={form.exp_year} onChange={e => set({ exp_year: e.target.value.replace(/\D/g, "").slice(0, 4) })} /></Field>
+        <Field label="CVV" t={t}><Input t={t} type="tel" placeholder="000" value={form.cvv} onChange={e => set({ cvv: e.target.value.replace(/\D/g, "").slice(0, 4) })} /></Field>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <Field label="CEP DO TITULAR" t={t}><Input t={t} placeholder="00000-000" value={form.postal_code} onChange={e => set({ postal_code: e.target.value })} /></Field>
-        <Field label="N\u00DAMERO (ENDERE\u00C7O)" t={t}><Input t={t} placeholder="123" value={form.address_number} onChange={e => set({ address_number: e.target.value })} /></Field>
+        <Field label="CEP DO TITULAR" t={t}><Input t={t} type="tel" placeholder="00000-000" value={form.postal_code} onChange={e => set({ postal_code: maskCEP(e.target.value) })} /></Field>
+        <Field label={"NÚMERO (ENDEREÇO)"} t={t}><Input t={t} type="tel" placeholder="123" value={form.address_number} onChange={e => set({ address_number: e.target.value.replace(/\D/g, "").slice(0, 10) })} /></Field>
       </div>
     </div>
   )
