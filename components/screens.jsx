@@ -15,6 +15,30 @@ function maskBRPhone(v) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
 }
 
+// Máscara de CPF: 000.000.000-00
+function maskCPF(v) {
+  const d = (v || "").replace(/\D/g, "").slice(0, 11)
+  if (!d) return ""
+  if (d.length <= 3) return d
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
+}
+
+// Validação real de CPF (dígitos verificadores)
+function isValidCPF(v) {
+  const d = (v || "").replace(/\D/g, "")
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false
+  let s = 0
+  for (let i = 0; i < 9; i++) s += Number(d[i]) * (10 - i)
+  let dv = (s * 10) % 11; if (dv === 10) dv = 0
+  if (dv !== Number(d[9])) return false
+  s = 0
+  for (let i = 0; i < 10; i++) s += Number(d[i]) * (11 - i)
+  dv = (s * 10) % 11; if (dv === 10) dv = 0
+  return dv === Number(d[10])
+}
+
 // ─── Welcome ─────────────────────────────────────────────────────────────────
 export function ScreenWelcome({ next, t }) {
   const [showContent, setShowContent] = useState(false)
@@ -905,9 +929,9 @@ export function ScreenCheckout({ next, t, restart }) {
     if (!form.name.trim() || !form.email.trim()) { setError("Preencha nome e e-mail."); return }
 
     const method = tab // já é "pix" ou "credit_card"
-    if (method === "pix" && !form.cpf.trim()) { setError("Informe seu CPF para pagar via PIX."); return }
-    if (method === "credit_card" && (!form.cpf.trim() || !form.phone.trim() || !form.postal_code.trim() || !form.address_number.trim())) {
-      setError("Para cartão, preencha CPF, telefone, CEP e número."); return
+    if (!isValidCPF(form.cpf)) { setError("CPF inválido. Confira os números digitados."); return }
+    if (method === "credit_card" && (!form.phone.trim() || !form.postal_code.trim() || !form.address_number.trim())) {
+      setError("Para cartão, preencha telefone, CEP e número."); return
     }
 
     const payload = {
@@ -1062,7 +1086,7 @@ function PixForm({ t, form, set }) {
     <div style={{ marginBottom: 20 }}>
       <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Seu nome" value={form.name} onChange={e => set({ name: e.target.value })} /></Field>
       <Field label="E-MAIL" t={t}><Input t={t} type="email" placeholder="voce@email.com" value={form.email} onChange={e => set({ email: e.target.value })} /></Field>
-      <Field label="CPF" t={t}><Input t={t} placeholder="000.000.000-00" value={form.cpf} onChange={e => set({ cpf: e.target.value })} /></Field>
+      <Field label="CPF" t={t}><Input t={t} type="tel" placeholder="000.000.000-00" value={form.cpf} onChange={e => set({ cpf: maskCPF(e.target.value) })} /></Field>
       <div style={{ padding: 12, background: `${t.goldTone}10`, border: `1px solid ${t.goldTone}40`, borderRadius: 8, fontSize: 12, color: "rgba(255,255,255,.7)" }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill={t.goldTone} style={{ flexShrink: 0, marginTop: 1 }}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Pagamento via PIX &eacute; aprovado em segundos. Seu acesso &eacute; liberado na hora.
       </div>
@@ -1076,7 +1100,7 @@ function CardForm({ t, form, set }) {
       <Field label="NOME COMPLETO" t={t}><Input t={t} placeholder="Como est\u00E1 no cart\u00E3o" value={form.holder_name} onChange={e => set({ holder_name: e.target.value, name: form.name || e.target.value })} /></Field>
       <Field label="E-MAIL" t={t}><Input t={t} type="email" placeholder="voce@email.com" value={form.email} onChange={e => set({ email: e.target.value })} /></Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <Field label="CPF DO TITULAR" t={t}><Input t={t} placeholder="000.000.000-00" value={form.cpf} onChange={e => set({ cpf: e.target.value })} /></Field>
+        <Field label="CPF DO TITULAR" t={t}><Input t={t} type="tel" placeholder="000.000.000-00" value={form.cpf} onChange={e => set({ cpf: maskCPF(e.target.value) })} /></Field>
         <Field label="TELEFONE (DDD)" t={t}><Input t={t} type="tel" placeholder="(48) 99999-9999" value={form.phone} onChange={e => set({ phone: maskBRPhone(e.target.value) })} /></Field>
       </div>
       <Field label="N\u00DAMERO DO CART\u00C3O" t={t}><Input t={t} placeholder="0000 0000 0000 0000" value={form.number} onChange={e => set({ number: e.target.value })} /></Field>
@@ -1120,6 +1144,9 @@ export function ScreenSuccess({ restart, t }) {
   const payment = result?.payment
   const token = result?.token
   const pix = payment?.method === "pix" ? payment?.pix_qr_code : null
+  const pixQrImage = payment?.method === "pix" ? payment?.pix_qr_code_base64 : null
+  const granted = !!telegram?.invite_link
+  const awaitingPix = !granted && !!pix
 
   const refreshAccess = async () => {
     if (!token) return
@@ -1140,29 +1167,60 @@ export function ScreenSuccess({ restart, t }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Enquanto aguarda o PIX, verifica sozinho a cada 5s se o pagamento caiu.
+  useEffect(() => {
+    if (!token || granted || !pix) return
+    const id = setInterval(async () => {
+      try {
+        const { getSubscription } = await import("../lib/api")
+        const data = await getSubscription(token)
+        if (data?.telegram?.invite_link) setTelegram(data.telegram)
+      } catch {}
+    }, 5000)
+    return () => clearInterval(id)
+  }, [token, granted, pix])
+
   return (
     <ContentWrap>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 24, minHeight: "50vh" }}>
-        {/* Animated badge */}
-        <div className={show ? "mb-splash-logo" : ""} style={{
-          width: 110, height: 110, borderRadius: 999,
-          background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}cc)`,
-          display: "grid", placeItems: "center",
-          boxShadow: `0 0 35px ${t.goldTone}66, 0 0 80px ${t.goldTone}30, 0 0 130px ${t.goldTone}15`,
-          border: `2px solid ${t.goldTone}88`,
-        }}>
-          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#0B0A07" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        </div>
+        {/* Aguardando PIX: mostra o QR CODE. Confirmado: mostra o check dourado. */}
+        {awaitingPix && pixQrImage ? (
+          <div className={show ? "mb-splash-logo" : ""} style={{
+            background: "#fff", padding: 14, borderRadius: 16,
+            boxShadow: `0 0 35px ${t.goldTone}44, 0 0 80px ${t.goldTone}20`,
+            border: `2px solid ${t.goldTone}88`,
+          }}>
+            <img
+              src={pixQrImage.startsWith("data:") || pixQrImage.startsWith("http") ? pixQrImage : `data:image/png;base64,${pixQrImage}`}
+              alt="QR Code PIX"
+              style={{ width: 210, height: 210, display: "block" }}
+            />
+          </div>
+        ) : (
+          <div className={show ? "mb-splash-logo" : ""} style={{
+            width: 110, height: 110, borderRadius: 999,
+            background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}cc)`,
+            display: "grid", placeItems: "center",
+            boxShadow: `0 0 35px ${t.goldTone}66, 0 0 80px ${t.goldTone}30, 0 0 130px ${t.goldTone}15`,
+            border: `2px solid ${t.goldTone}88`,
+          }}>
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#0B0A07" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </div>
+        )}
 
-        <H1 t={t}>Voc&ecirc; &eacute; da <span style={{ color: t.goldTone }}>banca</span>.</H1>
+        <H1 t={t}>
+          {awaitingPix
+            ? <>Escaneie e <span style={{ color: t.goldTone }}>pague</span>.</>
+            : <>Voc&ecirc; &eacute; da <span style={{ color: t.goldTone }}>banca</span>.</>}
+        </H1>
 
         <Sub>
           {telegram?.invite_link
             ? "Acesso liberado! Toque no botão abaixo pra entrar no grupo VIP."
             : pix
-              ? "Quase lá! Pague o PIX abaixo pra liberar seu acesso ao Telegram."
+              ? "Escaneie o QR code com o app do seu banco ou use o copia e cola abaixo. Seu acesso libera na hora."
               : "Pedido recebido. Assim que o pagamento for confirmado, seu acesso ao Telegram é liberado."}
         </Sub>
 
