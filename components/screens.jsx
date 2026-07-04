@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { ContentWrap, Eyebrow, H1, Sub, OptionCard, PrimaryButton, Logo } from "./ui"
-import { checkout as apiCheckout } from "../lib/api"
+import { checkout as apiCheckout, createLead } from "../lib/api"
 import { checkoutStore } from "../lib/checkout-store"
 
 // ─── Welcome ─────────────────────────────────────────────────────────────────
@@ -873,6 +873,17 @@ export function ScreenCheckout({ next, t, restart }) {
         if (ms.length) setTab(ms[0])
       }).catch(() => setError("Não foi possível carregar os planos."))
     )
+
+    // Pré-preenche com o lead capturado no funil (nome + WhatsApp).
+    const lead = checkoutStore.getLead()
+    if (lead) {
+      setForm(f => ({
+        ...f,
+        name: f.name || lead.name || "",
+        phone: f.phone || lead.whatsapp || "",
+        holder_name: f.holder_name || lead.name || "",
+      }))
+    }
   }, [])
 
   const set = (patch) => { setForm(f => ({ ...f, ...patch })); setError(null) }
@@ -892,6 +903,7 @@ export function ScreenCheckout({ next, t, restart }) {
     const payload = {
       name: form.name, email: form.email, cpf: form.cpf || undefined, phone: form.phone || undefined,
       plan_id: plan.id, method,
+      lead_token: checkoutStore.getLead()?.lead_token || undefined, // liga o carrinho ao lead
     }
     if (method === "credit_card") {
       payload.card = {
@@ -948,7 +960,10 @@ export function ScreenCheckout({ next, t, restart }) {
             ))}
             <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px dashed ${t.goldTone}40` }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "rgba(255,255,255,.5)", fontFamily: "'Geist Mono', ui-monospace, monospace" }}>
-                <span>De</span><span style={{ textDecoration: "line-through" }}>R$ 239,90</span>
+                <span>De</span>
+                <span style={{ textDecoration: "line-through" }}>
+                  R$ {(((plan?.price_cents ?? 3990) + 20000) / 100).toFixed(2).replace(".", ",")}
+                </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: t.goldTone, marginTop: 8, fontFamily: "'Geist Mono', ui-monospace, monospace" }}>
                 <span>Desconto</span><span>− R$ 200,00</span>
@@ -1186,6 +1201,69 @@ export function ScreenSuccess({ restart, t }) {
           ))}
         </div>
 
+      </div>
+    </ContentWrap>
+  )
+}
+
+// ─── Lead (nome + WhatsApp p/ recuperação de carrinho) ──────────────────────
+export function ScreenLead({ next, t }) {
+  const [name, setName] = useState("")
+  const [whatsapp, setWhatsapp] = useState("")
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Se já capturamos antes (recarregou a página), pula direto.
+  useEffect(() => {
+    const lead = checkoutStore.getLead()
+    if (lead?.name && lead?.whatsapp) {
+      setName(lead.name)
+      setWhatsapp(lead.whatsapp)
+    }
+  }, [])
+
+  const submit = async () => {
+    setError(null)
+    if (!name.trim()) { setError("Digite seu nome."); return }
+    const digits = whatsapp.replace(/\D/g, "")
+    if (digits.length < 10) { setError("Digite seu WhatsApp com DDD."); return }
+
+    setSending(true)
+    let lead = { name: name.trim(), whatsapp: digits, lead_token: null }
+    try {
+      const res = await createLead(name.trim(), digits)
+      lead.lead_token = res.lead_token || null
+    } catch {
+      // não trava o funil se a API falhar — segue com o lead local
+    }
+    checkoutStore.setLead(lead)
+    setSending(false)
+    next()
+  }
+
+  return (
+    <ContentWrap>
+      <Eyebrow t={t}>QUASE LÁ</Eyebrow>
+      <H1 t={t}>Garanta sua <span style={{ color: t.goldTone }}>vaga</span>.</H1>
+      <Sub>Seu nome e WhatsApp pra gente te avisar quando as entradas sa&iacute;rem.</Sub>
+
+      <div style={{ width: "100%", maxWidth: 420, marginTop: 8 }}>
+        <Field label="SEU NOME" t={t}>
+          <Input t={t} placeholder="Como quer ser chamado" value={name} onChange={e => { setName(e.target.value); setError(null) }} />
+        </Field>
+        <Field label="WHATSAPP (DDD)" t={t}>
+          <Input t={t} placeholder="(48) 99999-9999" value={whatsapp} onChange={e => { setWhatsapp(e.target.value); setError(null) }} />
+        </Field>
+
+        {error && (
+          <div style={{ padding: 12, marginBottom: 16, background: "rgba(229,72,77,.1)", border: "1px solid rgba(229,72,77,.4)", borderRadius: 8, fontSize: 13, color: "#ff8a8d" }}>
+            {error}
+          </div>
+        )}
+
+        <PrimaryButton t={t} onClick={submit} sub="SEUS DADOS ESTÃO SEGUROS">
+          {sending ? "Salvando…" : "Continuar"}
+        </PrimaryButton>
       </div>
     </ContentWrap>
   )

@@ -8,11 +8,13 @@ import { rankFor, useRewardBus, RewardLayer, Confetti, LevelToast, GameHUD } fro
 import {
   ScreenWelcome, ScreenAge, ScreenFocus, ScreenRoleta, ScreenConexao, ScreenGreen,
   ScreenDepoimentos, ScreenLifestyle, ScreenLast, ScreenAnalyzing, ScreenVSL, ScreenCheckout, ScreenSuccess,
+  ScreenLead,
 } from "../components/screens"
 
 const STEPS = [
   { id: "welcome",   Cmp: ScreenWelcome,   pct: 8,   balance: "0,00",    reward: "0,00",   mission: { idx: "01/09", text: "Escolha como quer ser identificado", reward: "21,78" } },
-  { id: "age",       Cmp: ScreenAge,       pct: 16,  balance: "21,78",   reward: "21,78",  mission: { idx: "02/09", text: "Defina sua faixa et\u00E1ria",                reward: "21,88" } },
+  { id: "lead",      Cmp: ScreenLead,      pct: 12,  balance: "21,78",   reward: "21,78",  mission: { idx: "02/10", text: "Garanta sua vaga na lista",           reward: "21,88" } },
+  { id: "age",       Cmp: ScreenAge,       pct: 16,  balance: "21,78",   reward: "0",      mission: { idx: "03/10", text: "Defina sua faixa et\u00E1ria",                reward: "21,88" } },
   { id: "focus",     Cmp: ScreenFocus,     pct: 26,  balance: "43,66",   reward: "21,88",  mission: { idx: "03/09", text: "Qual seu foco pra faturar",            reward: "43,76" } },
   { id: "roleta",    Cmp: ScreenRoleta,    pct: 38,  balance: "87,42",   reward: "43,76",  mission: { idx: "04/09", text: "Gire a roleta e ganhe",               reward: "50,00" } },
   { id: "conexao",   Cmp: ScreenConexao,   pct: 48,  balance: "137,42",  reward: "50,00",  mission: { idx: "05/09", text: "Veja o que o King conquistou",       reward: "21,79" } },
@@ -48,6 +50,25 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  // Retoma o funil de onde parou ao recarregar a página (ex.: direto no checkout).
+  useEffect(() => {
+    try {
+      let saved = localStorage.getItem("steike_step")
+      if (!saved) return
+      if (saved === "success") saved = "checkout" // sucesso depende de dados da sessão
+      const i = STEPS.findIndex(s => s.id === saved)
+      if (i > 0) {
+        setIdx(i)
+        prevRankRef.current = rankFor(STEPS[i].pct).index
+      }
+    } catch {}
+  }, [])
+
+  // Salva o passo atual para a retomada.
+  useEffect(() => {
+    try { localStorage.setItem("steike_step", STEPS[idx].id) } catch {}
+  }, [idx])
+
   const next = (e) => {
     setIdx(i => {
       const ni = Math.min(i + 1, STEPS.length - 1)
@@ -81,6 +102,7 @@ export default function Home() {
     setIdx(0)
     setStreak(0)
     prevRankRef.current = 0
+    try { localStorage.removeItem("steike_step") } catch {}
   }
 
   const step = STEPS[idx]
