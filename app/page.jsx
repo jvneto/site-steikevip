@@ -111,7 +111,7 @@ export default function Home() {
   return (
     <>
       <PageShell t={t}>
-        {/* Fixed header — shrinks on scroll */}
+        {/* Fixed header  shrinks on scroll */}
         <div style={{
           position: "sticky", top: 0, zIndex: 100,
           background: "rgba(6,5,4,.95)",

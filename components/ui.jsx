@@ -171,7 +171,7 @@ export function PageShell({ children, t }) {
       position: "relative",
       fontFamily: "'Geist', 'Sora', system-ui, sans-serif",
     }}>
-      {/* Ambient neon glow — intensified */}
+      {/* Ambient neon glow  intensified */}
       <div style={{
         position: "absolute", inset: 0, pointerEvents: "none",
         background: `
@@ -250,7 +250,7 @@ export function Eyebrow({ children, t }) {
   )
 }
 
-// Per-heading-font treatment — each display face wants its own size/tracking/case
+// Per-heading-font treatment  each display face wants its own size/tracking/case
 const HEADING_STYLES = {
   "Anton":               { stack: "'Anton', 'Oswald', 'Arial Narrow', sans-serif", weight: 400, upper: true,  ls: ".006em", lh: .9,   size: "clamp(46px, 7.2vw, 96px)" },
   "Syne":                { stack: "'Syne', system-ui, sans-serif",                  weight: 800, upper: true,  ls: "-.01em", lh: .96,  size: "clamp(36px, 5.4vw, 72px)" },
@@ -267,7 +267,7 @@ export function H1({ children, t }) {
     stack: `'${hf}', 'Space Grotesk', system-ui, sans-serif`,
     weight: 700, upper: false, ls: "-.035em", lh: .98, size: "clamp(36px, 5.2vw, 68px)",
   }
-  // Metallic gold gradient — champagne highlights over the brand gold and a
+  // Metallic gold gradient  champagne highlights over the brand gold and a
   // bronze shadow band give the polished-metal sheen. Clipped to the text.
   const metalGold = `linear-gradient(180deg, #BF953F 0%, #FCF6BA 24%, ${t.goldTone} 48%, #F7ECA6 70%, #9C7A22 100%)`
   return (

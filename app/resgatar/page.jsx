@@ -89,7 +89,7 @@ export default function ResgatarPage() {
               👑 Entrar no Grupo VIP
             </a>
             <p style={{ color: "rgba(255,255,255,.4)", fontSize: 12, marginTop: 12, lineHeight: 1.5 }}>
-              Link de uso único, vinculado à sua conta do Telegram — se outra conta tentar usar, será removida do grupo.
+              Link de uso único, vinculado à sua conta do Telegram  se outra conta tentar usar, será removida do grupo.
             </p>
           </>
         )}

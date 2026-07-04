@@ -22,7 +22,7 @@ export function ScreenWelcome({ next, t }) {
           flex: 1, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 24, minHeight: "50vh",
         }}>
-          {/* Splash logo — emblema grande como protagonista */}
+          {/* Splash logo  emblema grande como protagonista */}
           <img className="mb-splash-logo" src="/steike.png" alt="Steike VIP" style={{
             height: "clamp(170px, 36vw, 280px)", width: "auto", objectFit: "contain",
             filter: `drop-shadow(0 0 40px ${t.goldTone}66)`,
@@ -85,9 +85,9 @@ function Avatar({ t, kind }) {
 // ─── Age ─────────────────────────────────────────────────────────────────────
 export function ScreenAge({ next, t }) {
   const opts = [
-    { title: "18 — 25 anos", sub: "NOVA GERA\u00C7\u00C3O" },
-    { title: "26 — 40 anos", sub: "GERA\u00C7\u00C3O DE OURO" },
-    { title: "41 — 55 anos", sub: "EXPERI\u00CANCIA PURA" },
+    { title: "18  25 anos", sub: "NOVA GERA\u00C7\u00C3O" },
+    { title: "26  40 anos", sub: "GERA\u00C7\u00C3O DE OURO" },
+    { title: "41  55 anos", sub: "EXPERI\u00CANCIA PURA" },
     { title: "Acima de 55", sub: "RESPEITA O COROA" },
   ]
   return (
@@ -655,7 +655,7 @@ export function ScreenVSL({ next, t }) {
     if (!v) return
     const start = async () => {
       try {
-        await v.play()            // autoplay no mudo — sempre permitido
+        await v.play()            // autoplay no mudo  sempre permitido
         v.muted = false           // tenta ligar o som
         await v.play()
         setMuted(false)
@@ -1269,7 +1269,7 @@ export function ScreenLead({ next, t }) {
       const res = await createLead(name.trim(), digits)
       lead.lead_token = res.lead_token || null
     } catch {
-      // não trava o funil se a API falhar — segue com o lead local
+      // não trava o funil se a API falhar  segue com o lead local
     }
     checkoutStore.setLead(lead)
     setSending(false)

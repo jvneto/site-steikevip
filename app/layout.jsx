@@ -1,7 +1,7 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'SteikeVip — Banca Privada',
+  title: 'SteikeVip  Banca Privada',
   description: 'A elite das apostas',
 }
 

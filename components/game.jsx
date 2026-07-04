@@ -210,7 +210,7 @@ export function GameHUD({ pct, balance, t, mission, streak }) {
         </div>
       </div>
 
-      {/* XP bar — compact */}
+      {/* XP bar  compact */}
       <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{
           position: "relative", flex: 1, height: 5,
@@ -248,7 +248,7 @@ export function GameHUD({ pct, balance, t, mission, streak }) {
         </div>
       </div>
 
-      {/* Mission strip — compact */}
+      {/* Mission strip  compact */}
       {mission && (
         <div style={{
           marginTop: 8,
