@@ -1184,7 +1184,7 @@ export function ScreenSuccess({ restart, t }) {
               </div>
             )}
             <p style={{ color: "rgba(255,255,255,.55)", fontSize: 13, lineHeight: 1.55, margin: "4px 0 18px" }}>
-              Abra o app do seu banco e escaneie o c\u00f3digo abaixo.
+              Abra o app do seu banco e escaneie o código abaixo.
             </p>
 
             {pixQrImage && (
@@ -1204,7 +1204,7 @@ export function ScreenSuccess({ restart, t }) {
             {/* divisor */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 12px" }}>
               <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
-              <span style={{ fontFamily: mono, fontSize: 9, letterSpacing: ".24em", color: "rgba(255,255,255,.35)" }}>OU COPIE O C\u00d3DIGO</span>
+              <span style={{ fontFamily: mono, fontSize: 9, letterSpacing: ".24em", color: "rgba(255,255,255,.35)" }}>OU COPIE O CÓDIGO</span>
               <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
             </div>
 
@@ -1226,7 +1226,7 @@ export function ScreenSuccess({ restart, t }) {
               fontFamily: "'Geist', system-ui, sans-serif",
               boxShadow: `0 0 22px ${t.goldTone}44`,
             }}>
-              {copied ? "✓ C\u00d3DIGO COPIADO!" : "COPIAR C\u00d3DIGO PIX"}
+              {copied ? "✓ CÓDIGO COPIADO!" : "COPIAR CÓDIGO PIX"}
             </button>
 
             <button onClick={refreshAccess} disabled={checking} style={{
@@ -1235,14 +1235,14 @@ export function ScreenSuccess({ restart, t }) {
               color: "rgba(255,255,255,.65)", cursor: "pointer",
               fontFamily: mono, fontSize: 11, letterSpacing: ".18em",
             }}>
-              {checking ? "VERIFICANDO\u2026" : "J\u00c1 PAGUEI \u00b7 LIBERAR ACESSO"}
+              {checking ? "VERIFICANDO…" : "JÁ PAGUEI · LIBERAR ACESSO"}
             </button>
 
             {/* status aguardando */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 16 }}>
               <span className="mb-glow-bar" style={{ width: 8, height: 8, borderRadius: 999, background: t.goldTone, boxShadow: `0 0 8px ${t.goldTone}aa` }} />
               <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: ".18em", color: "rgba(255,255,255,.4)" }}>
-                AGUARDANDO PAGAMENTO \u2014 LIBERA\u00c7\u00c3O AUTOM\u00c1TICA
+                AGUARDANDO PAGAMENTO — LIBERAÇÃO AUTOMÁTICA
               </span>
             </div>
           </div>
@@ -1267,17 +1267,17 @@ export function ScreenSuccess({ restart, t }) {
           </svg>
         </div>
 
-        <H1 t={t}>Voc\u00ea \u00e9 da <span style={{ color: t.goldTone }}>banca</span>.</H1>
+        <H1 t={t}>Você é da <span style={{ color: t.goldTone }}>banca</span>.</H1>
 
         <Sub>
           {granted
-            ? "Acesso liberado! Toque no bot\u00e3o abaixo pra entrar no grupo VIP."
-            : "Pedido recebido. Assim que o pagamento for confirmado, seu acesso ao Telegram \u00e9 liberado."}
+            ? "Acesso liberado! Toque no botão abaixo pra entrar no grupo VIP."
+            : "Pedido recebido. Assim que o pagamento for confirmado, seu acesso ao Telegram é liberado."}
         </Sub>
 
         {granted && (
           <a href={telegram.invite_link} target="_blank" rel="noreferrer" style={{ textDecoration: "none", width: "100%", maxWidth: 420 }}>
-            <PrimaryButton t={t} large sub="LINK DE USO \u00daNICO \u00b7 EXPIRA AP\u00d3S ENTRAR">
+            <PrimaryButton t={t} large sub="LINK DE USO ÚNICO · EXPIRA APÓS ENTRAR">
               Entrar no grupo VIP
             </PrimaryButton>
           </a>
