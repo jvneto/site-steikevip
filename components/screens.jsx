@@ -944,7 +944,7 @@ export function ScreenCheckout({ next, t, restart }) {
         {/* Order summary */}
         <div>
           <h2 style={{ fontFamily: t.displayFont, fontSize: "clamp(34px, 4.4vw, 52px)", lineHeight: .98, letterSpacing: "-.03em", margin: "0 0 28px", fontWeight: 600 }}>
-            Banca Privada<br /><span style={{ color: t.goldTone }}>VIP</span>
+            Grupo<br /><span style={{ color: t.goldTone }}>VIP</span>
           </h2>
           <div style={{
             background: "rgba(255,255,255,.02)",
