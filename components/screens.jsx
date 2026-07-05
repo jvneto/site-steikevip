@@ -1119,6 +1119,9 @@ export function ScreenSuccess({ restart, t }) {
   const pixQrImage = payment?.method === "pix" ? payment?.pix_qr_code_base64 : null
   const granted = !!telegram?.invite_link
   const awaitingPix = !granted && !!pix
+  const amountLabel = payment?.amount_cents
+    ? (payment.amount_cents / 100).toFixed(2).replace(".", ",")
+    : null
 
   const refreshAccess = async () => {
     if (!token) return
@@ -1152,95 +1155,133 @@ export function ScreenSuccess({ restart, t }) {
     return () => clearInterval(id)
   }, [token, granted, pix])
 
+  const mono = "'Geist Mono', ui-monospace, monospace"
+
+  // ── Aguardando PIX: card único com QR, valor, copia-e-cola e status ────────
+  if (awaitingPix) {
+    return (
+      <ContentWrap>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4vh 0", minHeight: "50vh" }}>
+          <div className={show ? "mb-screen-enter" : ""} style={{
+            width: "100%", maxWidth: 440,
+            background: "rgba(255,255,255,.025)",
+            border: `1px solid ${t.goldTone}30`,
+            borderRadius: 18, padding: "28px 26px",
+            textAlign: "center",
+            boxShadow: `0 0 30px ${t.goldTone}12, 0 0 70px ${t.goldTone}08`,
+          }}>
+            <div style={{ fontFamily: mono, fontSize: 10, letterSpacing: ".3em", color: t.goldTone, marginBottom: 10 }}>
+              PAGAMENTO VIA PIX
+            </div>
+            <h2 style={{ fontFamily: t.displayFont, fontSize: "clamp(26px, 4vw, 34px)", fontWeight: 700, letterSpacing: "-.02em", margin: "0 0 6px", color: "#fff" }}>
+              Escaneie e <span style={{ color: t.goldTone }}>pague</span>.
+            </h2>
+            {amountLabel && (
+              <div style={{ margin: "10px 0 4px" }}>
+                <span style={{ fontFamily: t.displayFont, fontSize: 34, fontWeight: 700, color: t.goldTone, letterSpacing: "-.02em", textShadow: `0 0 18px ${t.goldTone}55` }}>
+                  R$ {amountLabel}
+                </span>
+              </div>
+            )}
+            <p style={{ color: "rgba(255,255,255,.55)", fontSize: 13, lineHeight: 1.55, margin: "4px 0 18px" }}>
+              Abra o app do seu banco e escaneie o c\u00f3digo abaixo.
+            </p>
+
+            {pixQrImage && (
+              <div style={{
+                display: "inline-block", background: "#fff", padding: 12, borderRadius: 14,
+                border: `2px solid ${t.goldTone}66`,
+                boxShadow: `0 0 26px ${t.goldTone}33`,
+              }}>
+                <img
+                  src={pixQrImage.startsWith("data:") || pixQrImage.startsWith("http") ? pixQrImage : `data:image/png;base64,${pixQrImage}`}
+                  alt="QR Code PIX"
+                  style={{ width: 200, height: 200, display: "block" }}
+                />
+              </div>
+            )}
+
+            {/* divisor */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 12px" }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+              <span style={{ fontFamily: mono, fontSize: 9, letterSpacing: ".24em", color: "rgba(255,255,255,.35)" }}>OU COPIE O C\u00d3DIGO</span>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+            </div>
+
+            {/* copia e cola compacto (1 linha) */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              background: "rgba(0,0,0,.45)", border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: 10, padding: "12px 14px", marginBottom: 12,
+            }}>
+              <span style={{ flex: 1, fontFamily: mono, fontSize: 11, color: "rgba(255,255,255,.55)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "left" }}>
+                {pix}
+              </span>
+            </div>
+
+            <button onClick={copyPix} style={{
+              width: "100%", padding: "15px", borderRadius: 10, border: "none",
+              background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}dd)`,
+              color: "#0B0A07", fontWeight: 800, fontSize: 15, cursor: "pointer",
+              fontFamily: "'Geist', system-ui, sans-serif",
+              boxShadow: `0 0 22px ${t.goldTone}44`,
+            }}>
+              {copied ? "✓ C\u00d3DIGO COPIADO!" : "COPIAR C\u00d3DIGO PIX"}
+            </button>
+
+            <button onClick={refreshAccess} disabled={checking} style={{
+              width: "100%", marginTop: 10, padding: "13px", borderRadius: 10,
+              border: "1px solid rgba(255,255,255,.15)", background: "transparent",
+              color: "rgba(255,255,255,.65)", cursor: "pointer",
+              fontFamily: mono, fontSize: 11, letterSpacing: ".18em",
+            }}>
+              {checking ? "VERIFICANDO\u2026" : "J\u00c1 PAGUEI \u00b7 LIBERAR ACESSO"}
+            </button>
+
+            {/* status aguardando */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 16 }}>
+              <span className="mb-glow-bar" style={{ width: 8, height: 8, borderRadius: 999, background: t.goldTone, boxShadow: `0 0 8px ${t.goldTone}aa` }} />
+              <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: ".18em", color: "rgba(255,255,255,.4)" }}>
+                AGUARDANDO PAGAMENTO \u2014 LIBERA\u00c7\u00c3O AUTOM\u00c1TICA
+              </span>
+            </div>
+          </div>
+        </div>
+      </ContentWrap>
+    )
+  }
+
+  // ── Pago / acesso liberado ──────────────────────────────────────────────────
   return (
     <ContentWrap>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 24, minHeight: "50vh" }}>
-        {/* Aguardando PIX: mostra o QR CODE. Confirmado: mostra o check dourado. */}
-        {awaitingPix && pixQrImage ? (
-          <div className={show ? "mb-splash-logo" : ""} style={{
-            background: "#fff", padding: 14, borderRadius: 16,
-            boxShadow: `0 0 35px ${t.goldTone}44, 0 0 80px ${t.goldTone}20`,
-            border: `2px solid ${t.goldTone}88`,
-          }}>
-            <img
-              src={pixQrImage.startsWith("data:") || pixQrImage.startsWith("http") ? pixQrImage : `data:image/png;base64,${pixQrImage}`}
-              alt="QR Code PIX"
-              style={{ width: 210, height: 210, display: "block" }}
-            />
-          </div>
-        ) : (
-          <div className={show ? "mb-splash-logo" : ""} style={{
-            width: 110, height: 110, borderRadius: 999,
-            background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}cc)`,
-            display: "grid", placeItems: "center",
-            boxShadow: `0 0 35px ${t.goldTone}66, 0 0 80px ${t.goldTone}30, 0 0 130px ${t.goldTone}15`,
-            border: `2px solid ${t.goldTone}88`,
-          }}>
-            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#0B0A07" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-          </div>
-        )}
+        <div className={show ? "mb-splash-logo" : ""} style={{
+          width: 110, height: 110, borderRadius: 999,
+          background: `linear-gradient(135deg, ${t.goldTone}, ${t.goldTone}cc)`,
+          display: "grid", placeItems: "center",
+          boxShadow: `0 0 35px ${t.goldTone}66, 0 0 80px ${t.goldTone}30, 0 0 130px ${t.goldTone}15`,
+          border: `2px solid ${t.goldTone}88`,
+        }}>
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#0B0A07" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </div>
 
-        <H1 t={t}>
-          {awaitingPix
-            ? <>Escaneie e <span style={{ color: t.goldTone }}>pague</span>.</>
-            : <>Voc&ecirc; &eacute; da <span style={{ color: t.goldTone }}>banca</span>.</>}
-        </H1>
+        <H1 t={t}>Voc\u00ea \u00e9 da <span style={{ color: t.goldTone }}>banca</span>.</H1>
 
         <Sub>
-          {telegram?.invite_link
-            ? "Acesso liberado! Toque no botão abaixo pra entrar no grupo VIP."
-            : pix
-              ? "Escaneie o QR code com o app do seu banco ou use o copia e cola abaixo. Seu acesso libera na hora."
-              : "Pedido recebido. Assim que o pagamento for confirmado, seu acesso ao Telegram é liberado."}
+          {granted
+            ? "Acesso liberado! Toque no bot\u00e3o abaixo pra entrar no grupo VIP."
+            : "Pedido recebido. Assim que o pagamento for confirmado, seu acesso ao Telegram \u00e9 liberado."}
         </Sub>
 
-        {/* Acesso ao Telegram (quando a assinatura estiver ativa) */}
-        {telegram?.invite_link && (
+        {granted && (
           <a href={telegram.invite_link} target="_blank" rel="noreferrer" style={{ textDecoration: "none", width: "100%", maxWidth: 420 }}>
-            <PrimaryButton t={t} large sub="LINK DE USO ÚNICO · EXPIRA APÓS ENTRAR">
+            <PrimaryButton t={t} large sub="LINK DE USO \u00daNICO \u00b7 EXPIRA AP\u00d3S ENTRAR">
               Entrar no grupo VIP
             </PrimaryButton>
           </a>
         )}
-
-        {/* PIX copia e cola */}
-        {!telegram?.invite_link && pix && (
-          <div style={{ width: "100%", maxWidth: 460, padding: 20, background: "rgba(255,255,255,.025)", border: `1px solid ${t.goldTone}30`, borderRadius: 14 }}>
-            <div style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".22em", color: "rgba(255,255,255,.45)", marginBottom: 10 }}>PIX COPIA E COLA</div>
-            <div style={{ wordBreak: "break-all", fontSize: 12, color: "rgba(255,255,255,.8)", background: "rgba(0,0,0,.4)", padding: 12, borderRadius: 8, fontFamily: "'Geist Mono', ui-monospace, monospace", marginBottom: 12 }}>{pix}</div>
-            <button onClick={copyPix} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${t.goldTone}`, background: `${t.goldTone}15`, color: t.goldTone, cursor: "pointer", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11, letterSpacing: ".18em", marginBottom: 10 }}>
-              {copied ? "COPIADO!" : "COPIAR CÓDIGO PIX"}
-            </button>
-            <button onClick={refreshAccess} disabled={checking} style={{ width: "100%", padding: "12px", borderRadius: 8, border: "1px solid rgba(255,255,255,.15)", background: "transparent", color: "rgba(255,255,255,.7)", cursor: "pointer", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11, letterSpacing: ".18em" }}>
-              {checking ? "VERIFICANDO…" : "JÁ PAGUEI · LIBERAR ACESSO"}
-            </button>
-          </div>
-        )}
-
-        {/* Summary card */}
-        <div style={{
-          padding: "20px 28px",
-          background: "rgba(255,255,255,.025)",
-          backdropFilter: "blur(12px)",
-          border: `1px solid ${t.goldTone}25`,
-          borderRadius: t.corners === "sharp" ? 0 : 14,
-          display: "flex", gap: 32, justifyContent: "center", flexWrap: "wrap",
-          boxShadow: `0 0 20px ${t.goldTone}10`,
-        }}>
-          {[
-            ["SALDO TOTAL", "R$ 268,70"],
-            ["RANK", "LENDA"],
-            ["MISS\u00D5ES", "10/10"],
-          ].map(([label, val], i) => (
-            <div key={i} style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: ".22em", color: "rgba(255,255,255,.35)", marginBottom: 6 }}>{label}</div>
-              <div style={{ fontFamily: t.displayFont, fontSize: 18, fontWeight: 700, color: t.goldTone, textShadow: `0 0 10px ${t.goldTone}44` }}>{val}</div>
-            </div>
-          ))}
-        </div>
-
       </div>
     </ContentWrap>
   )
