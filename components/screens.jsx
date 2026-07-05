@@ -814,16 +814,20 @@ function CountdownTimer({ t }) {
 function VagasCounter({ t }) {
   const [vagas, setVagas] = useState(12)
   useEffect(() => {
+    let timer // guarda o timer ATUAL para o cleanup sempre limpar o certo
+    let stopped = false
     const drop = () => {
       const delay = 8000 + Math.random() * 25000 // 8-33s
-      const id = setTimeout(() => {
-        setVagas(v => { if (v <= 3) return v; return v - 1 })
-        drop()
+      timer = setTimeout(() => {
+        setVagas(v => {
+          if (v <= 3) { stopped = true; return v } // chegou no piso: para de reagendar
+          return v - 1
+        })
+        if (!stopped) drop()
       }, delay)
-      return id
     }
-    const id = drop()
-    return () => clearTimeout(id)
+    drop()
+    return () => clearTimeout(timer)
   }, [])
   return (
     <div style={{
@@ -890,6 +894,7 @@ export function ScreenCheckout({ next, t, restart }) {
   const set = (patch) => { setForm(f => ({ ...f, ...patch })); setError(null) }
 
   const submit = async () => {
+    if (loading) return // evita cobrança duplicada por duplo clique
     setError(null)
     if (!plan) { setError("Não foi possível carregar o plano. Recarregue a página."); return }
     if (!tab) { setError("Selecione uma forma de pagamento."); return }
@@ -1019,7 +1024,7 @@ export function ScreenCheckout({ next, t, restart }) {
             </div>
           )}
 
-          <PrimaryButton t={t} large onClick={submit} sub="PROCESSAMENTO SEGURO &middot; SSL 256-BIT">
+          <PrimaryButton t={t} large onClick={submit} disabled={loading} sub="PROCESSAMENTO SEGURO &middot; SSL 256-BIT">
             {loading ? "Processando…" : `Pagar ${priceLabel}`}
           </PrimaryButton>
 
@@ -1304,6 +1309,7 @@ export function ScreenLead({ next, t }) {
   }, [])
 
   const submit = async () => {
+    if (sending) return // evita lead duplicado por duplo clique
     setError(null)
     if (!name.trim()) { setError("Digite seu nome."); return }
     const digits = whatsapp.replace(/\D/g, "")
@@ -1342,7 +1348,7 @@ export function ScreenLead({ next, t }) {
           </div>
         )}
 
-        <PrimaryButton t={t} onClick={submit} sub="SEUS DADOS ESTÃO SEGUROS">
+        <PrimaryButton t={t} onClick={submit} disabled={sending} sub="SEUS DADOS ESTÃO SEGUROS">
           {sending ? "Salvando…" : "Continuar"}
         </PrimaryButton>
       </div>

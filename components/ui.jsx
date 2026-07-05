@@ -82,13 +82,16 @@ export function Footer({ t }) {
   )
 }
 
-export function PrimaryButton({ children, sub, onClick, t, large }) {
+export function PrimaryButton({ children, sub, onClick, t, large, disabled }) {
   const r = t.corners === "sharp" ? 0 : t.corners === "soft" ? 8 : 14
   const style = t.buttonStyle
   const off = t.shadowOffset
   const base = {
     width: "100%", padding: large ? "26px 30px" : "22px 26px",
-    borderRadius: r, border: "none", cursor: "pointer",
+    borderRadius: r, border: "none",
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.6 : 1,
+    pointerEvents: disabled ? "none" : "auto",
     fontFamily: t.displayFont, letterSpacing: "-.01em",
     textAlign: "center",
     transition: "transform .18s cubic-bezier(.2,.7,.2,1), box-shadow .25s, filter .25s",
@@ -119,7 +122,7 @@ export function PrimaryButton({ children, sub, onClick, t, large }) {
   const hoverShadow = `${off + 4}px ${off + 4}px 0 0 ${style === "outline" ? t.goldTone : "#1a160c"}, 0 0 40px ${t.goldTone}66, 0 0 90px ${t.goldTone}30, 0 0 140px ${t.goldTone}15`
   const pressShadow = `0 0 20px ${t.goldTone}88, 0 0 50px ${t.goldTone}33`
   return (
-    <button onClick={onClick} style={{ ...base, ...extra }}
+    <button onClick={onClick} disabled={disabled} style={{ ...base, ...extra }}
       className="mb-shimmer mb-cta-glow"
       onMouseEnter={e => { e.currentTarget.style.transform = `translate(-${Math.min(off, 4)}px, -${Math.min(off, 4)}px)`; e.currentTarget.style.boxShadow = hoverShadow; e.currentTarget.style.filter = `brightness(1.12)`; e.currentTarget.style.animationPlayState = "paused"; }}
       onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = extra.boxShadow; e.currentTarget.style.filter = "none"; e.currentTarget.style.animationPlayState = "running"; }}
